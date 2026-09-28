@@ -86,7 +86,12 @@ Règles :
 - Ne recopie jamais de phrases de la source ; reformule avec tes mots.
 - N'invente aucun fait, score, date ou citation absent de l'extrait.
 - Ton neutre et factuel. "body" fait 40 à 150 mots selon l'information disponible : si l'extrait est maigre, écris une brève courte plutôt que de broder.
-- "sport" doit être une de ces valeurs : ${SPORTS.map((s) => s.slug).join(", ")}, ou "hors-sujet" si ce n'est pas du sport de combat.
+- "sport" est la rubrique, une de ces valeurs :
+${SPORTS.map((s) => `  - ${s.slug} : ${s.name} (${s.description})`).join("\n")}
+  ou "hors-sujet" si l'info ne concerne pas les sports de combat ni leur univers.
+- "lifestyle" couvre l'équipement, les vêtements, les chaussures, les collaborations de marques et la culture fight.
+  Un résultat ou une annonce de combat va dans le sport concerné, jamais en lifestyle.
+- En lifestyle, reste informatif, sans ton publicitaire ; ne donne un prix ou une date de sortie que s'ils sont dans l'extrait.
 Réponds uniquement avec un objet JSON : {"title": string, "summary": string (1 phrase), "body": string, "sport": string, "tags": string[] (3 max)}`;
 
 type Rewrite = { title: string; summary: string; body: string; sport: string; tags: string[] };
