@@ -125,7 +125,7 @@ export function digestEmail(articles: Article[], sports: string[], base: string,
               (a) => `<tr><td style="padding:10px 24px">
 <a href="${esc(link(a))}" style="color:#15151c;text-decoration:none;font-size:17px;font-weight:bold;line-height:1.35">${esc(a.title)}</a>
 <p style="margin:6px 0 0;font-size:14px;line-height:1.55;color:#4b4b57">${esc(a.summary)}</p>
-<p style="margin:4px 0 0;font-size:12px;color:#8a8a96">via ${esc(a.source_name)}</p>
+<p style="margin:4px 0 0;font-size:12px;color:#8a8a96">via ${esc(a.source_name)}${a.source_official ? " · source officielle" : ""}</p>
 </td></tr>`,
             )
             .join(""),

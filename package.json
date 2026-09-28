@@ -8,6 +8,7 @@
     "start": "next start",
     "pipeline": "tsx --env-file-if-exists=.env.local pipeline/run.ts",
     "pipeline:dry": "tsx --env-file-if-exists=.env.local pipeline/run.ts --dry-run",
+    "sources:check": "tsx pipeline/check-sources.ts",
     "newsletter": "tsx --env-file-if-exists=.env.local pipeline/newsletter.ts",
     "newsletter:preview": "tsx --env-file-if-exists=.env.local pipeline/newsletter.ts --dry-run"
   },

@@ -14,7 +14,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;500;600&display=swap" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@400;500;600;700&display=swap" />
       </head>
       <body>
         <Header />
@@ -25,7 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="logo">FIGHT<span>NEWS</span></p>
               <p>FightNews résume l'actualité et renvoie toujours vers la source d'origine.</p>
               <p>
-                <Link href="/newsletter">Newsletter</Link> · <Link href="/confidentialite">Mentions légales et confidentialité</Link>
+                <Link href="/actus">Toute l'actu</Link> · <Link href="/newsletter">Newsletter</Link> ·{" "}
+                <Link href="/confidentialite">Mentions légales et confidentialité</Link>
               </p>
             </div>
             <div>

@@ -9,6 +9,7 @@ export type Article = {
   image_url: string | null;
   source_name: string;
   source_url: string;
+  source_official?: boolean; // fédération ou organisation officielle
   published_at: string;
   status: "draft" | "published" | "rejected";
 };

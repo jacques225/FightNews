@@ -4,13 +4,15 @@ Site d'actualité de tous les sports de combat, mis à jour automatiquement :
 les flux RSS sont lus toutes les 30 minutes, une IA rédige une brève originale en français
 pour chaque nouvelle info, la range dans la bonne rubrique (dont une rubrique **Lifestyle**
 pour les collections, l'équipement et la culture fight) et cite le média d'origine.
+Les sources officielles (fédérations, organisations) sont signalées par un badge **Officiel**.
+Rien n'est effacé : toutes les anciennes actus restent consultables, rubrique par rubrique, page après page.
 Chaque vendredi, les abonnés reçoivent **le récap de la semaine** par e-mail.
 
 ```
 Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
                │  1. lit les flux        (pipeline/sources.json)
                │  2. ignore les liens déjà vus
-               │  3. IA : résumé original + rubrique + tags
+               │  3. IA : résumé original + rubrique + tags, écarte les doublons
                ▼
            Supabase (table "articles", en brouillon par défaut)
                │                                   │
@@ -25,7 +27,9 @@ Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
 app/
   page.tsx                   Accueil : la une, la newsletter, un bloc par sport, le bloc Lifestyle
   [sport]/page.tsx           Une page par rubrique (/mma, /boxe, /lifestyle…)
-  article/[slug]/page.tsx    Page article, avec le lien vers la source
+  [sport]/page/[n]/          Ses archives, page après page (/mma/page/2…)
+  actus/                     Toute l'actu, toutes rubriques confondues, avec ses archives
+  article/[slug]/page.tsx    Page article, avec la source et les actus précédentes de la rubrique
   newsletter/                Page d'inscription et page de désabonnement
   api/newsletter/            Inscription, confirmation et désabonnement
   confidentialite/page.tsx   Mentions légales et confidentialité (à compléter)
@@ -38,7 +42,8 @@ lib/
   email.ts                   Envoi des e-mails et modèles (confirmation, récap)
 pipeline/
   run.ts                     Le robot : RSS → IA → base de données
-  sources.json               Les flux suivis : ajoute une ligne pour une nouvelle source
+  sources.json               Les flux suivis (voir « Les sources » plus bas)
+  check-sources.ts           Vérifie que chaque flux répond
   newsletter.ts              Le récap hebdo
 supabase/schema.sql          Les tables à créer dans Supabase
 .github/workflows/           Les tâches planifiées (robot, récap) et les vérifications
@@ -117,12 +122,59 @@ Comment ça marche :
 - **Ménage automatique** : les inscriptions jamais confirmées et les désabonnements sont effacés au bout de 30 jours.
 - Les abonnés sont dans la table `subscribers` de Supabase ; les récaps envoyés dans `newsletter_editions`.
 
+## Les sources
+
+Le robot lit les flux de `pipeline/sources.json`, tous vérifiés depuis GitHub le 28 septembre 2026.
+En **gras**, les sources officielles (fédérations, organisations) : leurs articles portent le badge « Officiel ».
+
+| Rubrique | Sources |
+|---|---|
+| MMA | **UFC**, **ONE Championship**, **IMMAF** (fédération internationale amateur), **Hexagone MMA**, **FMMAF**, La Sueur, RMC Sport, L'Équipe, MMA Fighting, Sherdog, Cageside Press |
+| Boxe anglaise | **FFBoxe**, **World Boxing**, **WBC**, **WBA**, **IBF**, **WBO**, L'Équipe, Boxing News 24, Boxing News, Bad Left Hook |
+| Kickboxing | **FFKMDA** |
+| Muay thaï | **IFMA** |
+| Judo | L'Esprit du Judo, L'Équipe, franceinfo |
+| Grappling & JJB | **ADCC**, BJJEE, BJJ Heroes, Boost Your BJJ |
+| Lutte | **FFLDA** |
+
+Les médias généralistes parlent aussi des autres sports : l'IA range chaque info dans la bonne rubrique,
+quelle que soit la source.
+
+Ce qui manque, et pourquoi :
+- **FMMAF** : son site n'a rien publié depuis août 2025. Le MMA dépend de la FFBoxe depuis 2020 (délégation
+  du ministère des Sports), dont le flux est suivi. Le flux FMMAF reste dans la liste et reprendra dès que le site republiera.
+- **JJB** : aucune fédération ne publie de flux RSS (IBJJF, AJP, UAEJJF, JJIF, CFJJB, ni France Judo,
+  qui a la délégation du JJB en France depuis 2021). Le JJB arrive par l'ADCC, BJJEE, BJJ Heroes
+  et Boost Your BJJ (en français).
+- **Judo et lutte internationaux** : l'IJF et United World Wrestling n'ont pas de flux RSS.
+- **Google Actualités** : retiré, car Google interdit aux robots de lire ses flux de recherche (fichier robots.txt).
+  Eurosport l'interdit aussi.
+- **Lifestyle** : les marques testées (Venum, Hayabusa) n'ont pas de flux utilisable.
+  Les sorties de collections relayées par les médias suivis sont rangées en Lifestyle par l'IA.
+
+**Ajouter une source** : une ligne de plus dans `pipeline/sources.json`, par exemple
+
+```json
+{ "name": "Nom affiché sur le site", "url": "https://exemple.com/feed/", "sport": "mma", "official": true }
+```
+
+`sport` est la rubrique proposée à l'IA (`mma`, `boxe`, `kickboxing`, `muay-thai`, `judo`, `grappling`, `lutte`, `lifestyle`).
+Mets `"official": true` seulement pour une fédération ou une organisation.
+
+**Vérifier les sources** : onglet *Actions* du dépôt, tâche *Vérifier les sources*, bouton *Run workflow*.
+Elle tourne aussi chaque lundi et à chaque modification de la liste. Le tableau affiché sur sa page donne,
+pour chaque flux, s'il répond, combien d'articles il a publiés ces dernières 24 h et la date du dernier,
+et signale un site qui interdit aux robots de lire son flux. Il estime aussi le nombre d'infos par jour
+et le coût de l'IA. Un flux en erreur est réessayé une fois. S'il reste en panne, la tâche passe en rouge :
+c'est le moment de le retirer ou de le remplacer. Un site momentanément indisponible (trop lent, ou son serveur
+en erreur) est signalé « à surveiller » sans faire passer la tâche en rouge : le robot le relira au passage suivant.
+
 ## Coût estimé
 
 | Poste | Prix |
 |---|---|
 | Vercel, Supabase, GitHub Actions | 0 € au départ (offres gratuites) |
-| IA (modèle léger, ~25 brèves max par passage) | quelques euros à ~20 € par mois selon le volume |
+| IA (Claude Haiku 4.5, 25 infos max par passage) | environ 10 $ par mois avec les sources actuelles (recalculé par *Vérifier les sources*) |
 | Resend (e-mails) | gratuit pour démarrer (quelques milliers d'e-mails par mois), payant au-delà |
 | Nom de domaine | ~10 € par an |
 
@@ -133,7 +185,8 @@ Estimation indicative : vérifie les tarifs du moment sur chaque service.
 - L'IA a pour consigne de **reformuler**, de ne rien inventer, et de faire court si la source est maigre.
 - En **Lifestyle**, elle reste informative, sans ton publicitaire, et ne donne un prix ou une date de sortie
   que s'ils figurent dans la source.
-- Chaque article affiche **le média d'origine avec un lien** (pour Google Actualités, le vrai média est retrouvé automatiquement).
+- Chaque article affiche **le média d'origine avec un lien**, et le badge « Source officielle »
+  quand l'info vient d'une fédération ou d'une organisation.
 - **Aucune photo des sources n'est reprise** (droits d'auteur) : les cartes utilisent un dégradé aux couleurs de la rubrique.
   Pour de vraies images : photos presse officielles des organisations et des marques (souvent fournies dans leurs kits presse),
   Wikimedia Commons, ou tes propres visuels. Le champ `image_url` d'un article sert à en ajouter une.

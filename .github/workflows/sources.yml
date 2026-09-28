@@ -1,0 +1,27 @@
+name: Vérifier les sources
+
+# Teste chaque flux RSS depuis GitHub (le même réseau que le robot) :
+# à chaque modification des sources, chaque lundi, ou à la main (bouton "Run workflow").
+# Le tableau des résultats s'affiche sur la page de la tâche.
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - "pipeline/sources.json"
+      - "pipeline/feeds.ts"
+      - "pipeline/check-sources.ts"
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run sources:check

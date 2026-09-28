@@ -16,6 +16,9 @@ create table if not exists articles (
   created_at timestamptz not null default now()
 );
 
+-- Ajouts après la première version (sans effet si la colonne existe déjà)
+alter table articles add column if not exists source_official boolean not null default false; -- source officielle : badge sur le site
+
 create index if not exists articles_sport_date on articles (sport, published_at desc);
 create index if not exists articles_status_date on articles (status, published_at desc);
 
