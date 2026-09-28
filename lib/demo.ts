@@ -1,4 +1,5 @@
 import type { Article } from "./types";
+import { SPORTS } from "./sports";
 
 // Données fictives affichées tant que Supabase n'est pas configuré,
 // pour voir le design sans rien brancher.
@@ -17,3 +18,26 @@ export const DEMO_ARTICLES: Article[] = [
   { id: "10", slug: "demo-lifestyle-sneakers", sport: "lifestyle", title: "Chaussures de boxe : le modèle culte revient en nouveau coloris", summary: "La réédition vise autant le ring que la rue.", body: "", tags: ["sneakers"], image_url: null, source_name: "Exemple Source", source_url: "https://example.com", published_at: h(30), status: "published" },
   { id: "7", slug: "demo-mma-pfl", sport: "mma", title: "PFL : les finalistes de la saison sont connus", summary: "Récapitulatif des demi-finales et des affiches de la finale.", body: "", tags: ["PFL"], image_url: null, source_name: "Exemple Source", source_url: "https://example.com", published_at: h(26), status: "published" },
 ].map((a) => ({ ...a, body: `Ceci est un article de démonstration. Une fois le pipeline branché, ce texte sera un résumé original rédigé par l'IA à partir de la source citée plus bas.`, status: "published" as const }));
+
+// Articles plus anciens, pour voir les pages d'archives en démo.
+const ARCHIVE: Article[] = Array.from({ length: 60 }, (_, i) => {
+  const sport = SPORTS[i % SPORTS.length];
+  const official = i % 5 === 0;
+  return {
+    id: `archive-${i + 1}`,
+    slug: `demo-archive-${i + 1}`,
+    sport: sport.slug,
+    title: `${sport.name} : actu plus ancienne n° ${i + 1}`,
+    summary: "Article fictif qui montre comment les anciennes actus restent consultables.",
+    body: "Ceci est un article de démonstration, plus ancien, pour illustrer les pages d'archives.",
+    tags: [],
+    image_url: null,
+    source_name: official ? "Fédération (exemple)" : "Exemple Source",
+    source_url: "https://example.com",
+    source_official: official,
+    published_at: h(36 + i * 11),
+    status: "published",
+  };
+});
+
+DEMO_ARTICLES.push(...ARCHIVE);

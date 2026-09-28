@@ -16,6 +16,7 @@ export default function ArticleCard({ article, large = false }: { article: Artic
         }}
       >
         <span className="badge" style={{ background: sport?.color }}>{sport?.short}</span>
+        {article.source_official && <span className="official official-card">Officiel</span>}
       </div>
       <div className="card-body">
         <h3>{article.title}</h3>

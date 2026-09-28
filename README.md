@@ -4,13 +4,15 @@ Site d'actualité de tous les sports de combat, mis à jour automatiquement :
 les flux RSS sont lus toutes les 30 minutes, une IA rédige une brève originale en français
 pour chaque nouvelle info, la range dans la bonne rubrique (dont une rubrique **Lifestyle**
 pour les collections, l'équipement et la culture fight) et cite le média d'origine.
+Les sources officielles (fédérations, organisations) sont signalées par un badge **Officiel**.
+Rien n'est effacé : toutes les anciennes actus restent consultables, rubrique par rubrique, page après page.
 Chaque vendredi, les abonnés reçoivent **le récap de la semaine** par e-mail.
 
 ```
 Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
                │  1. lit les flux        (pipeline/sources.json)
                │  2. ignore les liens déjà vus
-               │  3. IA : résumé original + rubrique + tags
+               │  3. IA : résumé original + rubrique + tags, écarte les doublons
                ▼
            Supabase (table "articles", en brouillon par défaut)
                │                                   │
@@ -25,7 +27,9 @@ Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
 app/
   page.tsx                   Accueil : la une, la newsletter, un bloc par sport, le bloc Lifestyle
   [sport]/page.tsx           Une page par rubrique (/mma, /boxe, /lifestyle…)
-  article/[slug]/page.tsx    Page article, avec le lien vers la source
+  [sport]/page/[n]/          Ses archives, page après page (/mma/page/2…)
+  actus/                     Toute l'actu, toutes rubriques confondues, avec ses archives
+  article/[slug]/page.tsx    Page article, avec la source et les actus précédentes de la rubrique
   newsletter/                Page d'inscription et page de désabonnement
   api/newsletter/            Inscription, confirmation et désabonnement
   confidentialite/page.tsx   Mentions légales et confidentialité (à compléter)
@@ -38,7 +42,8 @@ lib/
   email.ts                   Envoi des e-mails et modèles (confirmation, récap)
 pipeline/
   run.ts                     Le robot : RSS → IA → base de données
-  sources.json               Les flux suivis : ajoute une ligne pour une nouvelle source
+  sources.json               Les flux suivis (voir « Les sources » plus bas)
+  check-sources.ts           Vérifie que chaque flux répond
   newsletter.ts              Le récap hebdo
 supabase/schema.sql          Les tables à créer dans Supabase
 .github/workflows/           Les tâches planifiées (robot, récap) et les vérifications
@@ -122,7 +127,7 @@ Comment ça marche :
 | Poste | Prix |
 |---|---|
 | Vercel, Supabase, GitHub Actions | 0 € au départ (offres gratuites) |
-| IA (modèle léger, ~25 brèves max par passage) | quelques euros à ~20 € par mois selon le volume |
+| IA (modèle léger, 25 infos max par passage) | environ 10 à 30 € par mois selon le nombre de sources |
 | Resend (e-mails) | gratuit pour démarrer (quelques milliers d'e-mails par mois), payant au-delà |
 | Nom de domaine | ~10 € par an |
 

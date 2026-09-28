@@ -1,12 +1,37 @@
 [
   { "name": "MMA Fighting", "url": "https://www.mmafighting.com/rss/current", "sport": "mma" },
   { "name": "Sherdog", "url": "https://www.sherdog.com/rss/news.xml", "sport": "mma" },
+  { "name": "MMA Junkie", "url": "https://mmajunkie.usatoday.com/feed", "sport": "mma" },
+  { "name": "Cageside Press", "url": "https://cagesidepress.com/feed/", "sport": "mma" },
+  { "name": "Google Actualités (MMA)", "url": "https://news.google.com/rss/search?q=MMA+OR+UFC+OR+PFL&hl=fr&gl=FR&ceid=FR:fr", "sport": "mma" },
+  { "name": "Google Actualités (MMA amateur)", "url": "https://news.google.com/rss/search?q=FMMAF+OR+%22championnat+de+France+de+MMA%22+OR+%22MMA+League%22&hl=fr&gl=FR&ceid=FR:fr", "sport": "mma" },
+  { "name": "FMMAF", "url": "https://www.fmmaf.fr/feed/", "sport": "mma", "official": true },
+  { "name": "IMMAF", "url": "https://immaf.org/feed/", "sport": "mma", "official": true },
+  { "name": "ONE Championship", "url": "https://www.onefc.com/feed/", "sport": "mma", "official": true },
+
+  { "name": "FFBoxe", "url": "https://www.ffboxe.com/feed/", "sport": "boxe", "official": true },
+  { "name": "WBC", "url": "https://wbcboxing.com/feed/", "sport": "boxe", "official": true },
+  { "name": "WBA", "url": "https://www.wbaboxing.com/feed", "sport": "boxe", "official": true },
+  { "name": "WBO", "url": "https://www.wboboxing.com/feed/", "sport": "boxe", "official": true },
+  { "name": "Bad Left Hook", "url": "https://www.badlefthook.com/rss/current", "sport": "boxe" },
+  { "name": "Boxing News 24", "url": "https://www.boxingnews24.com/feed/", "sport": "boxe" },
   { "name": "Google Actualités (boxe)", "url": "https://news.google.com/rss/search?q=boxe+championnat&hl=fr&gl=FR&ceid=FR:fr", "sport": "boxe" },
+
+  { "name": "Beyond Kickboxing", "url": "https://beyondkick.com/feed/", "sport": "kickboxing" },
   { "name": "Google Actualités (kickboxing)", "url": "https://news.google.com/rss/search?q=kickboxing+OR+Glory+kickboxing&hl=fr&gl=FR&ceid=FR:fr", "sport": "kickboxing" },
   { "name": "Google Actualités (muay thaï)", "url": "https://news.google.com/rss/search?q=%22muay+thai%22&hl=fr&gl=FR&ceid=FR:fr", "sport": "muay-thai" },
   { "name": "Google Actualités (judo)", "url": "https://news.google.com/rss/search?q=judo&hl=fr&gl=FR&ceid=FR:fr", "sport": "judo" },
+
+  { "name": "ADCC", "url": "https://adcombat.com/feed/", "sport": "grappling", "official": true },
+  { "name": "BJJEE", "url": "https://www.bjjee.com/feed/", "sport": "grappling" },
+  { "name": "Jits Magazine", "url": "https://jitsmagazine.com/feed/", "sport": "grappling" },
+  { "name": "Grappling Insider", "url": "https://grapplinginsider.com/feed/", "sport": "grappling" },
+  { "name": "Google Actualités (JJB)", "url": "https://news.google.com/rss/search?q=%22jiu-jitsu+br%C3%A9silien%22+OR+JJB+OR+CFJJB&hl=fr&gl=FR&ceid=FR:fr", "sport": "grappling" },
   { "name": "Google Actualités (grappling)", "url": "https://news.google.com/rss/search?q=grappling+OR+ADCC+OR+jiu-jitsu&hl=fr&gl=FR&ceid=FR:fr", "sport": "grappling" },
+
+  { "name": "FFLDA (lutte)", "url": "https://www.fflutte.com/feed/", "sport": "lutte", "official": true },
   { "name": "Google Actualités (lutte)", "url": "https://news.google.com/rss/search?q=lutte+gr%C3%A9co-romaine+OR+lutte+libre&hl=fr&gl=FR&ceid=FR:fr", "sport": "lutte" },
+
   { "name": "Google Actualités (marques fightwear)", "url": "https://news.google.com/rss/search?q=Venum+OR+Hayabusa+OR+RDX+OR+Everlast+collection&hl=fr&gl=FR&ceid=FR:fr", "sport": "lifestyle" },
   { "name": "Google Actualités (équipement)", "url": "https://news.google.com/rss/search?q=%22gants+de+boxe%22+OR+%22fight+kit%22+OR+%22short+de+MMA%22&hl=fr&gl=FR&ceid=FR:fr", "sport": "lifestyle" },
   { "name": "Google News (fightwear)", "url": "https://news.google.com/rss/search?q=%22fight+kit%22+OR+fightwear+OR+%22boxing+shoes%22&hl=en-US&gl=US&ceid=US:en", "sport": "lifestyle" }

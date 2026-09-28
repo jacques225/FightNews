@@ -7,6 +7,7 @@ export default function Header() {
       <div className="container header-inner">
         <Link href="/" className="logo">FIGHT<span>NEWS</span></Link>
         <nav className="nav">
+          <Link href="/actus" className="nav-all">Toute l'actu</Link>
           {SPORTS.map((s) => (
             <Link
               key={s.slug}

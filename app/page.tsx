@@ -24,6 +24,10 @@ export default async function Home() {
         </section>
       )}
 
+      <p className="all-news">
+        <Link href="/actus">Toute l'actu, de la plus récente à la plus ancienne →</Link>
+      </p>
+
       <section className="nl-band">
         <div>
           <h2>Le récap de la semaine, chaque vendredi</h2>
@@ -38,6 +42,10 @@ export default async function Home() {
           {i === 1 && <LifestyleBlock articles={lifestyle} />}
         </Fragment>
       ))}
+
+      <p className="more-news">
+        <Link href="/actus" className="btn">Voir toutes les actus</Link>
+      </p>
     </>
   );
 }

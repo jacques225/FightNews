@@ -27,7 +27,7 @@ const db =
 type Subscriber = { email: string; sports: string[]; token: string };
 
 async function weekArticles(): Promise<Article[]> {
-  if (!db) return DEMO_ARTICLES; // sans base : aperçu avec les articles de démo
+  if (!db) return DEMO_ARTICLES.filter((a) => Date.now() - Date.parse(a.published_at) < 7 * DAY); // aperçu en démo
   const since = new Date(Date.now() - 7 * DAY).toISOString();
   const { data, error } = await db
     .from("articles")

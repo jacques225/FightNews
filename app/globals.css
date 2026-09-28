@@ -63,6 +63,23 @@ main.container { padding-top: 24px; min-height: 70vh; }
 .footer a { text-decoration: underline; }
 .footer-title { color: var(--text); font-weight: 600; font-size: 15px; margin: 0 0 10px; }
 
+/* Archives */
+.nav-all { color: var(--text) !important; }
+.all-news { margin: -24px 0 32px; text-align: right; font-size: 14px; }
+.all-news a { color: var(--muted); }
+.all-news a:hover { color: var(--text); }
+.more-news { text-align: center; margin: 8px 0 0; }
+.more-news .btn { display: inline-block; }
+.pagination { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin: 32px 0 0; }
+.pagination a { padding: 10px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-weight: 600; font-size: 14px; }
+.pagination a:hover { border-color: #3a3a48; }
+.pagination a[rel="next"] { justify-self: end; }
+.pagination a[rel="prev"] { justify-self: start; }
+.pagination-info { color: var(--muted); font-size: 14px; }
+.related { margin-top: 48px; }
+.official { display: inline-block; margin-left: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.45); color: #6ee7b7; font-size: 12px; font-weight: 700; }
+.official-card { position: absolute; top: 12px; right: 12px; margin: 0; background: rgba(6, 78, 59, 0.85); }
+
 /* Navigation : rubrique Lifestyle et bouton newsletter */
 .nav-lifestyle { position: relative; margin-left: 10px; }
 .nav-lifestyle::before { content: ""; position: absolute; left: -7px; top: 25%; height: 50%; border-left: 1px solid var(--line); }
@@ -113,6 +130,9 @@ main.container { padding-top: 24px; min-height: 70vh; }
   .nav-cta { display: none; }
   .nl-page h1 { font-size: 32px; }
   .lifestyle-block { padding: 16px; }
+  .all-news { margin-top: -24px; text-align: left; }
+  .pagination { grid-template-columns: 1fr 1fr; }
+  .pagination-info { grid-column: 1 / -1; grid-row: 2; text-align: center; }
   .card-large h3 { font-size: 24px; }
   .header-inner { gap: 12px; }
   .article h1 { font-size: 30px; }

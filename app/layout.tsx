@@ -25,7 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="logo">FIGHT<span>NEWS</span></p>
               <p>FightNews résume l'actualité et renvoie toujours vers la source d'origine.</p>
               <p>
-                <Link href="/newsletter">Newsletter</Link> · <Link href="/confidentialite">Mentions légales et confidentialité</Link>
+                <Link href="/actus">Toute l'actu</Link> · <Link href="/newsletter">Newsletter</Link> ·{" "}
+                <Link href="/confidentialite">Mentions légales et confidentialité</Link>
               </p>
             </div>
             <div>
