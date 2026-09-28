@@ -36,6 +36,9 @@ const HEADERS = {
 const parse = (xml: string) =>
   new Parser<Record<string, never>, { sourceEl?: SourceEl }>({ customFields: { item: [["source", "sourceEl"]] } }).parseString(xml);
 
+/** Le site n'a pas répondu à temps : souvent passager (site lent ou surchargé). */
+export class TimeoutError extends Error {}
+
 /**
  * Télécharge une adresse (flux ou robots.txt), en suivant jusqu'à 5 redirections.
  * Au bout de 20 s, la connexion est vraiment coupée : avec le téléchargement de rss-parser,
@@ -62,7 +65,7 @@ export function download(url: string, redirects = 0): Promise<{ status: number; 
         reject(e);
       });
     });
-    const deadline = setTimeout(() => req.destroy(new Error("pas de réponse en 20 s")), 20_000);
+    const deadline = setTimeout(() => req.destroy(new TimeoutError("pas de réponse en 20 s")), 20_000);
     req.on("error", (e) => {
       clearTimeout(deadline);
       reject(e);

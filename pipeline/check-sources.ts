@@ -7,7 +7,7 @@
  * Usage : npm run sources:check
  */
 import { appendFileSync } from "node:fs";
-import { MAX_NEW_PER_RUN, download, eachSource, escapeRe, itemDate, readFeed, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, TimeoutError, download, eachSource, escapeRe, itemDate, readFeed, type Source } from "./feeds";
 
 const STALE_DAYS = 30;
 const DAY = 86400_000;
@@ -21,6 +21,7 @@ const COST_PER_ITEM_USD = (1600 * 1 + 350 * 5) / 1_000_000;
 type Result = {
   name: string; sport: string; official: boolean; url: string;
   ok: boolean; items: number; lastDay: string[]; latest?: string; title?: string; error?: string;
+  slow?: boolean; // pas de réponse à temps, deux fois : à surveiller, mais pas forcément en panne
 };
 
 function age(iso: string) {
@@ -101,7 +102,7 @@ async function check(s: Source): Promise<Result> {
       latest: dated[0]?.date, title: dated[0]?.title, error: feed.items.length ? undefined : "flux vide",
     };
   } catch (e) {
-    return { ...base, ok: false, items: 0, error: (e as Error).message.split("\n")[0].slice(0, 120) };
+    return { ...base, ok: false, items: 0, slow: e instanceof TimeoutError, error: (e as Error).message.split("\n")[0].slice(0, 120) };
   }
 }
 
@@ -110,10 +111,14 @@ async function main() {
 
   let broken = 0;
   let stale = 0;
+  let slow = 0;
   for (const r of results) {
     const tag = `[${r.sport}]${r.official ? " [officiel]" : ""} ${r.name}`;
     const day = `${r.lastDay.length}${isFull(r) ? "+" : ""} ces dernières 24 h`;
-    if (!r.ok) {
+    if (r.slow) {
+      slow++;
+      console.log(`⚠ ${tag} : ${r.error}, deux fois de suite (site lent ou surchargé, à surveiller)\n    ${r.url}`);
+    } else if (!r.ok) {
       broken++;
       console.log(`✗ ${tag} : ${r.error}\n    ${r.url}`);
     } else if (isStale(r)) {
@@ -134,14 +139,14 @@ async function main() {
     (perDay > MAX_PER_DAY ? `. Le robot en traite au plus ${MAX_PER_DAY} (${MAX_NEW_PER_RUN} par passage), les plus récentes d'abord` : "");
   const cost = `Coût IA estimé (Claude Haiku 4.5) : ${usd(treated * COST_PER_ITEM_USD)} par jour, soit ${usd(treated * COST_PER_ITEM_USD * 30)} par mois`;
 
-  console.log(`\n${results.length} sources : ${results.length - broken - stale} OK, ${stale} inactives, ${broken} en panne.`);
+  console.log(`\n${results.length} sources : ${results.length - broken - stale - slow} OK, ${stale} inactives, ${slow} trop lentes, ${broken} en panne.`);
   console.log(`${volume}.\n${cost}.`);
 
   // Tableau récapitulatif affiché sur la page de la tâche GitHub.
   if (process.env.GITHUB_STEP_SUMMARY) {
     const cell = (s: string) => s.replace(/\|/g, "/").slice(0, 80);
     const rows = results.map((r) => {
-      const state = !r.ok ? "❌ en panne" : isStale(r) ? "⚠️ inactive" : "✅ OK";
+      const state = r.slow ? "⚠️ trop lente" : !r.ok ? "❌ en panne" : isStale(r) ? "⚠️ inactive" : "✅ OK";
       const detail = r.ok
         ? `${r.items} articles, ${r.lastDay.length}${isFull(r) ? "+" : ""} en 24 h, dernier il y a ${age(r.latest!)}`
         : cell(r.error ?? "");
@@ -154,6 +159,7 @@ async function main() {
   }
 
   // En rouge si une source est en panne : GitHub te prévient, et une modification cassée se voit tout de suite.
+  // Un site seulement trop lent ne compte pas : le robot le relira au passage suivant.
   if (broken) process.exitCode = 1;
 }
 
