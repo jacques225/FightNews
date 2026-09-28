@@ -1,0 +1,10 @@
+[
+  { "name": "MMA Fighting", "url": "https://www.mmafighting.com/rss/current", "sport": "mma" },
+  { "name": "Sherdog", "url": "https://www.sherdog.com/rss/news.xml", "sport": "mma" },
+  { "name": "Google Actualités (boxe)", "url": "https://news.google.com/rss/search?q=boxe+championnat&hl=fr&gl=FR&ceid=FR:fr", "sport": "boxe" },
+  { "name": "Google Actualités (kickboxing)", "url": "https://news.google.com/rss/search?q=kickboxing+OR+Glory+kickboxing&hl=fr&gl=FR&ceid=FR:fr", "sport": "kickboxing" },
+  { "name": "Google Actualités (muay thaï)", "url": "https://news.google.com/rss/search?q=%22muay+thai%22&hl=fr&gl=FR&ceid=FR:fr", "sport": "muay-thai" },
+  { "name": "Google Actualités (judo)", "url": "https://news.google.com/rss/search?q=judo&hl=fr&gl=FR&ceid=FR:fr", "sport": "judo" },
+  { "name": "Google Actualités (grappling)", "url": "https://news.google.com/rss/search?q=grappling+OR+ADCC+OR+jiu-jitsu&hl=fr&gl=FR&ceid=FR:fr", "sport": "grappling" },
+  { "name": "Google Actualités (lutte)", "url": "https://news.google.com/rss/search?q=lutte+gr%C3%A9co-romaine+OR+lutte+libre&hl=fr&gl=FR&ceid=FR:fr", "sport": "lutte" }
+]

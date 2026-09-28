@@ -1,0 +1,26 @@
+{
+  "name": "fightnews",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "pipeline": "tsx pipeline/run.ts",
+    "pipeline:dry": "tsx pipeline/run.ts --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
+    "@supabase/supabase-js": "^2",
+    "next": "^15",
+    "react": "^19",
+    "react-dom": "^19",
+    "rss-parser": "^3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "tsx": "^4",
+    "typescript": "^5"
+  }
+}
