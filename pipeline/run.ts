@@ -3,7 +3,8 @@
  * 1. lit les flux RSS de pipeline/sources.json
  * 2. ignore les liens déjà traités (publiés, en brouillon ou écartés)
  * 3. demande à l'IA un résumé original en français + la rubrique + des tags,
- *    en lui donnant les titres déjà publiés pour qu'elle écarte les doublons
+ *    en lui donnant les titres déjà publiés pour qu'elle écarte les doublons.
+ *    Sans clé Claude (ou si Claude la refuse), reprend le titre et un court extrait de la source
  * 4. enregistre dans Supabase (en brouillon par défaut)
  *
  * Usage : npm run pipeline          (normal)
@@ -11,8 +12,9 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readFeed, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readFeed, snippetOf, type Source } from "./feeds";
 import { SPORTS } from "../lib/sports";
+import { excerpt, isRepeat, sportOf } from "./without-ai";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const MAX_AGE_HOURS = 48;
@@ -23,7 +25,8 @@ const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
     : null;
-const ai = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
+// L'IA est facultative : sans clé Claude, les brèves reprennent le titre et un extrait de la source.
+let ai = process.env.ANTHROPIC_API_KEY?.trim() ? new Anthropic() : null;
 const MODEL = process.env.AI_MODEL ?? "claude-haiku-4-5";
 const STATUS = process.env.PIPELINE_DEFAULT_STATUS === "published" ? "published" : "draft";
 
@@ -37,7 +40,7 @@ async function fetchAll(): Promise<Item[]> {
         const date = itemDate(it.isoDate ?? it.pubDate);
         if (Date.now() - new Date(date).getTime() > MAX_AGE_HOURS * 3600_000) continue;
         const { publisher, title } = publisherOf(it.sourceEl, it.title, source.name);
-        items.push({ title, link: it.link, snippet: (it.contentSnippet ?? "").slice(0, 1500), date, publisher, source });
+        items.push({ title, link: it.link, snippet: snippetOf(it.content, it.contentSnippet).slice(0, 1500), date, publisher, source });
       }
       console.log(`✓ ${source.name} : ${feed.items.length} entrées`);
     } catch (e) {
@@ -104,10 +107,9 @@ Réponds uniquement avec un objet JSON : {"title": string, "summary": string (1 
 
 type Rewrite = { title: string; summary: string; body: string; sport: string; tags: string[] };
 
-async function rewrite(item: Item, alreadyPublished: string[]): Promise<Rewrite | null> {
-  if (!ai) return null;
+async function rewrite(client: Anthropic, item: Item, alreadyPublished: string[]): Promise<Rewrite | null> {
   const published = alreadyPublished.length ? alreadyPublished.map((t) => `- ${t}`).join("\n") : "(rien)";
-  const res = await ai.messages.create({
+  const res = await client.messages.create({
     model: MODEL,
     max_tokens: 800,
     system: SYSTEM,
@@ -129,6 +131,11 @@ async function rewrite(item: Item, alreadyPublished: string[]): Promise<Rewrite 
     console.warn(`  réponse IA illisible pour ${item.link}`);
     return null;
   }
+}
+
+/** La clé ou le compte Claude bloque (clé refusée, plus de crédit) : inutile d'insister pendant ce passage. */
+function aiUnavailable(e: unknown) {
+  return e instanceof Anthropic.APIError && (e.status === 401 || e.status === 403 || (e.status === 400 && /credit balance/i.test(e.message)));
 }
 
 /** Garde la trace d'une info écartée (hors sujet, doublon) pour ne pas la repayer au prochain passage. */
@@ -154,11 +161,13 @@ const slugify = (s: string) =>
 async function main() {
   // Sur GitHub, un secret absent ne doit pas donner un passage au vert qui n'enregistre rien
   // (ni des brèves payées à l'IA puis perdues) : on s'arrête en rouge en nommant le secret.
-  const missing = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "ANTHROPIC_API_KEY"].filter((k) => !process.env[k]?.trim());
+  // La clé Claude, elle, est facultative.
+  const missing = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"].filter((k) => !process.env[k]?.trim());
   if (process.env.CI && !DRY_RUN && missing.length) {
     console.error(`Secret manquant : ${missing.join(", ")}. À ajouter dans Settings > Secrets and variables > Actions, onglet Secrets.`);
     process.exit(1);
   }
+  if (!ai) console.log("Sans clé Claude : chaque info est enregistrée avec son titre, un court extrait et le lien de sa source.\n");
 
   const all = await fetchAll();
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
@@ -169,24 +178,44 @@ async function main() {
   const recent = await recentTitles();
 
   for (const item of fresh) {
-    if (DRY_RUN || !ai) {
+    if (DRY_RUN) {
       console.log(`• [${item.source.sport}]${item.source.official ? " [officiel]" : ""} ${item.title} (${item.publisher})\n  ${item.link}`);
       continue;
     }
-    const r = await rewrite(item, recent.get(item.source.sport) ?? []);
-    if (!r) continue; // réponse illisible : on réessaiera au prochain passage
-    if (!SPORTS.some((s) => s.slug === r.sport)) {
-      console.log(`  écarté (${r.sport}) : ${item.title}`);
-      await markRejected(item, r.sport);
-      continue;
+    let r: Rewrite | null = null;
+    if (ai) {
+      try {
+        r = await rewrite(ai, item, recent.get(item.source.sport) ?? []);
+        if (!r) continue; // réponse illisible : on réessaiera au prochain passage
+      } catch (e) {
+        if (!aiUnavailable(e)) throw e;
+        console.warn(`IA indisponible (${(e as Error).message}) : la suite du passage se fait sans IA.`);
+        ai = null;
+      }
+    }
+
+    // La brève : rédigée par l'IA, ou sans IA le titre et un court extrait de la source.
+    let content: { title: string; summary: string; body: string; sport: string; tags: string[] };
+    if (r) {
+      const sport = r.sport;
+      if (!SPORTS.some((s) => s.slug === sport)) {
+        console.log(`  écarté (${sport}) : ${item.title}`);
+        await markRejected(item, sport);
+        continue;
+      }
+      content = { title: r.title, summary: r.summary, body: r.body, sport, tags: (r.tags ?? []).slice(0, 3) };
+    } else {
+      if (isRepeat(recent, item.title)) {
+        console.log(`  écarté (doublon) : ${item.title}`);
+        await markRejected(item, "doublon");
+        continue;
+      }
+      const title = item.title.trim().slice(0, 300);
+      content = { title, summary: excerpt(item.snippet, title), body: "", sport: sportOf(title, item.source.sport), tags: [] };
     }
     const row = {
-      slug: `${slugify(r.title)}-${Date.now().toString(36)}`,
-      title: r.title,
-      summary: r.summary,
-      body: r.body,
-      sport: r.sport,
-      tags: (r.tags ?? []).slice(0, 3),
+      slug: `${slugify(content.title)}-${Date.now().toString(36)}`,
+      ...content,
       image_url: null, // les photos des sources ne sont pas réutilisées (droits d'auteur)
       source_name: item.publisher,
       source_url: item.link,
@@ -199,10 +228,10 @@ async function main() {
       continue;
     }
     const { error } = await supabase.from("articles").insert(row);
-    console.log(error ? `  ✗ ${error.message}` : `  ✓ ${r.sport} : ${r.title}`);
+    console.log(error ? `  ✗ ${error.message}` : `  ✓ ${row.sport} : ${row.title}`);
     if (!error) {
-      remember(recent, r.sport, r.title);
-      if (r.sport !== item.source.sport) remember(recent, item.source.sport, r.title);
+      remember(recent, row.sport, row.title);
+      if (row.sport !== item.source.sport) remember(recent, item.source.sport, row.title);
     }
   }
 }
