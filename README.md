@@ -92,6 +92,7 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
    `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` et `ANTHROPIC_API_KEY`.
    Puis, dans l'onglet *Variables* du même écran, crée `PIPELINE_ENABLED` avec la valeur `true`.
    Le robot tourne alors toutes les 30 minutes (onglet *Actions*, bouton *Run workflow* pour le lancer à la main).
+   S'il manque un secret, le passage s'arrête en rouge et son journal donne le nom du secret à ajouter.
 2. Sur [vercel.com](https://vercel.com), importe le dépôt et ajoute les variables
    `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Le site est en ligne.
 
