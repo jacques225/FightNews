@@ -32,7 +32,6 @@
 
   { "name": "ADCC", "url": "https://www.adcombat.com/feed/", "sport": "grappling", "official": true },
   { "name": "BJJEE", "url": "https://www.bjjee.com/feed/", "sport": "grappling" },
-  { "name": "Jiu-Jitsu Times", "url": "https://www.jiujitsutimes.com/feed/", "sport": "grappling" },
   { "name": "BJJ Heroes", "url": "https://www.bjjheroes.com/feed", "sport": "grappling" },
   { "name": "Boost Your BJJ", "url": "https://boostyourbjj.fr/feed/", "sport": "grappling" },
 
