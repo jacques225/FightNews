@@ -1,4 +1,5 @@
 import { SPORTS } from "../lib/sports";
+import { escapeRe } from "./feeds";
 
 // Brèves sans IA (pas de clé Claude, ou clé refusée) : le robot reprend le titre de la source
 // et un court extrait, avec le lien vers l'article complet. Rien n'est réécrit ni traduit.
@@ -17,10 +18,14 @@ const TRAILERS = [
 export function excerpt(snippet: string, title: string): string {
   let text = snippet.replace(/\s+/g, " ").trim();
   for (const re of TRAILERS) text = text.replace(re, "");
-  // Certains flux répètent le titre en tête du résumé.
-  if (title && text.toLowerCase().startsWith(title.toLowerCase())) text = text.slice(title.length).replace(/^[\s:.–—-]+/, "");
+  if (title) {
+    // Certains flux répètent le titre en tête du résumé, ou le mettent en lien à la fin (« Titre @ Boxing News 24 »).
+    if (text.toLowerCase().startsWith(title.toLowerCase())) text = text.slice(title.length).replace(/^[\s:.–—-]+/, "");
+    text = text.replace(new RegExp(`\\s*${escapeRe(title)}\\s*@[^@]*$`, "i"), "");
+  }
   text = text.trim();
-  if (text.length <= MAX_EXCERPT) return text;
+  // Résumé déjà coupé par la source au milieu d'une phrase : on le signale.
+  if (text.length <= MAX_EXCERPT) return !text || /[.!?…"»”)]$/.test(text) ? text : text + "…";
   const cut = text.slice(0, MAX_EXCERPT);
   const end = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
   if (end > MAX_EXCERPT / 2) return cut.slice(0, end + 1);

@@ -142,6 +142,29 @@ export function publisherOf(el: SourceEl | undefined, title: string, fallback: s
 }
 export const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+/**
+ * Résumé en texte d'une info. Certains flux (MMA Fighting, Bad Left Hook) ouvrent leur contenu sur une photo
+ * et sa légende (« LAS VEGAS, NEVADA - SEPTEMBER 26: … ») : on retire la photo pour garder le début de l'article.
+ */
+export function snippetOf(content: string | undefined, contentSnippet: string | undefined): string {
+  if (!content || !/<figure\b/i.test(content)) return contentSnippet ?? "";
+  const text = content.replace(/<(figure|script|style)\b[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]*>/g, " ");
+  return decodeEntities(text).replace(/\s+/g, " ").trim();
+}
+
+const ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", hellip: "…",
+  rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", ndash: "–", mdash: "—", laquo: "«", raquo: "»",
+};
+
+function decodeEntities(s: string) {
+  return s.replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
+    if (e[0] !== "#") return ENTITIES[e] ?? m;
+    const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : Number(e.slice(1));
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+  });
+}
+
 /** Date ISO fiable : jamais dans le futur, maintenant si la date du flux est illisible. */
 export function itemDate(raw: string | undefined): string {
   const d = new Date(raw ?? Date.now());

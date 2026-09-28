@@ -12,7 +12,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readFeed, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readFeed, snippetOf, type Source } from "./feeds";
 import { SPORTS } from "../lib/sports";
 import { excerpt, isRepeat, sportOf } from "./without-ai";
 
@@ -40,7 +40,7 @@ async function fetchAll(): Promise<Item[]> {
         const date = itemDate(it.isoDate ?? it.pubDate);
         if (Date.now() - new Date(date).getTime() > MAX_AGE_HOURS * 3600_000) continue;
         const { publisher, title } = publisherOf(it.sourceEl, it.title, source.name);
-        items.push({ title, link: it.link, snippet: (it.contentSnippet ?? "").slice(0, 1500), date, publisher, source });
+        items.push({ title, link: it.link, snippet: snippetOf(it.content, it.contentSnippet).slice(0, 1500), date, publisher, source });
       }
       console.log(`✓ ${source.name} : ${feed.items.length} entrées`);
     } catch (e) {
