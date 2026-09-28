@@ -1,7 +1,6 @@
 [
   { "name": "FMMAF", "url": "https://www.fmmaf.fr/feed/", "sport": "mma", "official": true },
   { "name": "IMMAF", "url": "https://immaf.org/feed/", "sport": "mma", "official": true },
-  { "name": "IMMAF (Atom)", "url": "https://immaf.org/feed/atom/", "sport": "mma", "official": true },
   { "name": "UFC", "url": "https://www.ufc.com/rss/news", "sport": "mma", "official": true },
   { "name": "ONE Championship", "url": "https://www.onefc.com/feed/", "sport": "mma", "official": true },
   { "name": "Hexagone MMA", "url": "https://hexagonemma.fr/feed/", "sport": "mma", "official": true },
@@ -33,7 +32,9 @@
 
   { "name": "ADCC", "url": "https://www.adcombat.com/feed/", "sport": "grappling", "official": true },
   { "name": "BJJEE", "url": "https://www.bjjee.com/feed/", "sport": "grappling" },
-  { "name": "Jits Magazine", "url": "https://jitsmagazine.com/feed/", "sport": "grappling" },
+  { "name": "Jiu-Jitsu Times", "url": "https://www.jiujitsutimes.com/feed/", "sport": "grappling" },
+  { "name": "BJJ Heroes", "url": "https://www.bjjheroes.com/feed", "sport": "grappling" },
+  { "name": "Boost Your BJJ", "url": "https://boostyourbjj.fr/feed/", "sport": "grappling" },
 
   { "name": "FFLDA", "url": "https://www.fflutte.com/feed/", "sport": "lutte", "official": true }
 ]

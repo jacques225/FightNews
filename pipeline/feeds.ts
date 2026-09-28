@@ -79,19 +79,23 @@ export async function readFeed(url: string) {
   if (/^\s*(<!doctype html|<html)/i.test(xml)) throw new Error("page web au lieu d'un flux RSS");
   try {
     return await parse(xml);
-  } catch (e) {
+  } catch {
+    // Flux mal formé : on le répare et on réessaie. Si ça ne suffit pas, le message montre l'endroit fautif.
+    const repaired = repairXml(xml);
     try {
-      return await parse(repairXml(xml));
-    } catch {
-      throw xmlError(e as Error, xml);
+      return await parse(repaired);
+    } catch (e) {
+      throw xmlError(e as Error, repaired);
     }
   }
 }
 
-// Des sites laissent du HTML brut dans leur flux (<br>, <img> sans fin de balise) et le lecteur XML refuse tout le flux.
-// On ferme ces balises, hors blocs CDATA, avant de réessayer.
+// Deux défauts courants font refuser tout le flux au lecteur XML : un bloc <![CDATA[]]> vide glissé dans un contenu
+// déjà en CDATA (il le coupe en deux, c'est le cas de l'IMMAF), et du HTML brut (<br>, <img> sans fin de balise)
+// hors CDATA. On retire les blocs vides et on ferme ces balises avant de réessayer.
 function repairXml(xml: string) {
   return xml
+    .replace(/<!\[CDATA\[\]\]>/g, "")
     .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
     .map((part, i) => (i % 2 ? part : part.replace(/<(br|hr|img|input|wbr|col|area|embed|meta)\b([^>]*?)\s*\/?>/gi, "<$1$2/>")))
     .join("");
