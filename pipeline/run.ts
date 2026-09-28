@@ -152,6 +152,14 @@ const slugify = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
 
 async function main() {
+  // Sur GitHub, un secret absent ne doit pas donner un passage au vert qui n'enregistre rien
+  // (ni des brèves payées à l'IA puis perdues) : on s'arrête en rouge en nommant le secret.
+  const missing = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "ANTHROPIC_API_KEY"].filter((k) => !process.env[k]?.trim());
+  if (process.env.CI && !DRY_RUN && missing.length) {
+    console.error(`Secret manquant : ${missing.join(", ")}. À ajouter dans Settings > Secrets and variables > Actions, onglet Secrets.`);
+    process.exit(1);
+  }
+
   const all = await fetchAll();
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
   const fresh = (await filterNew(all))
