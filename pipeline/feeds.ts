@@ -1,3 +1,5 @@
+import { get as httpGet } from "node:http";
+import { get as httpsGet } from "node:https";
 import Parser from "rss-parser";
 import sources from "./sources.json";
 
@@ -25,32 +27,62 @@ type SourceEl = string | { _?: string; $?: { url?: string } };
 
 export const USER_AGENT = "Mozilla/5.0 (compatible; FightNewsBot/1.0; +https://github.com/jacques225/FightNews)";
 
+const HEADERS = {
+  "User-Agent": USER_AGENT,
+  Accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8",
+};
+
 const parser = new Parser<Record<string, never>, { sourceEl?: SourceEl }>({
   customFields: { item: [["source", "sourceEl"]] },
 });
 
 /**
- * Télécharge et lit un flux. Le téléchargement passe par fetch, qui coupe vraiment
- * la connexion au bout de 20 s (celui de rss-parser la laisse ouverte, et la tâche GitHub ne s'arrête plus).
+ * Télécharge une adresse (flux ou robots.txt), en suivant jusqu'à 5 redirections.
+ * Au bout de 20 s, la connexion est vraiment coupée : avec le téléchargement de rss-parser,
+ * un site lent restait connecté et la tâche GitHub ne s'arrêtait plus.
  */
-export async function readFeed(url: string) {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": USER_AGENT,
-      Accept: "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8",
-    },
-    signal: AbortSignal.timeout(20_000),
+export function download(url: string, redirects = 0): Promise<{ status: number; body: Buffer; contentType?: string }> {
+  return new Promise((resolve, reject) => {
+    const get = url.startsWith("https:") ? httpsGet : httpGet;
+    const req = get(url, { headers: HEADERS, agent: false }, (res) => {
+      const status = res.statusCode ?? 0;
+      if (status >= 300 && status < 400 && res.headers.location && redirects < 5) {
+        res.resume();
+        clearTimeout(deadline);
+        return resolve(download(new URL(res.headers.location, url).toString(), redirects + 1));
+      }
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => {
+        clearTimeout(deadline);
+        resolve({ status, body: Buffer.concat(chunks), contentType: res.headers["content-type"] });
+      });
+      res.on("error", (e) => {
+        clearTimeout(deadline);
+        reject(e);
+      });
+    });
+    const deadline = setTimeout(() => req.destroy(new Error("pas de réponse en 20 s")), 20_000);
+    req.on("error", (e) => {
+      clearTimeout(deadline);
+      reject(e);
+    });
   });
-  if (!res.ok) {
-    await res.body?.cancel();
-    throw new Error(`Status code ${res.status}`);
-  }
-  return parser.parseString(decode(await res.arrayBuffer(), res.headers.get("content-type")));
+}
+
+/** Télécharge et lit un flux RSS ou Atom. */
+export async function readFeed(url: string) {
+  const res = await download(url);
+  if (res.status >= 300) throw new Error(`Status code ${res.status}`);
+  const xml = decode(res.body, res.contentType);
+  // Certains sites renvoient une page web (souvent une protection anti-robots) à la place du flux.
+  if (/^\s*(<!doctype html|<html)/i.test(xml.replace(/^\uFEFF/, ""))) throw new Error("page web au lieu d'un flux RSS");
+  return parser.parseString(xml);
 }
 
 // La plupart des flux sont en UTF-8, quelques-uns en ISO-8859-1 : on lit l'encodage annoncé.
-function decode(buf: ArrayBuffer, contentType: string | null) {
-  const head = new TextDecoder("latin1").decode(buf.slice(0, 200));
+function decode(buf: Buffer, contentType: string | undefined) {
+  const head = new TextDecoder("latin1").decode(buf.subarray(0, 200));
   const charset =
     /charset=["']?([\w-]+)/i.exec(contentType ?? "")?.[1] ?? /encoding=["']([\w-]+)["']/i.exec(head)?.[1] ?? "utf-8";
   try {
