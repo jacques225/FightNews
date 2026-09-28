@@ -1,13 +1,13 @@
 /**
- * Vérifie chaque flux de pipeline/sources.json : répond-il, combien d'articles,
- * de quand date le plus récent, combien sont parus ces dernières 24 h.
+ * Vérifie chaque flux de pipeline/sources.json : le site autorise-t-il les robots à le lire (robots.txt),
+ * répond-il, combien d'articles, de quand date le plus récent, combien sont parus ces dernières 24 h.
  * Estime aussi le nombre d'infos que le robot traitera par jour et ce que ça coûte en IA.
  * Tourne sur GitHub (même réseau que le robot) à chaque modification des sources et chaque lundi.
  *
  * Usage : npm run sources:check
  */
 import { appendFileSync } from "node:fs";
-import { MAX_NEW_PER_RUN, eachSource, itemDate, parser, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, USER_AGENT, eachSource, escapeRe, itemDate, readFeed, type Source } from "./feeds";
 
 const STALE_DAYS = 30;
 const DAY = 86400_000;
@@ -33,10 +33,54 @@ const isStale = (r: Result) => Date.now() - new Date(r.latest!).getTime() > STAL
 const isFull = (r: Result) => r.items > 0 && r.lastDay.length === r.items;
 const usd = (n: number) => `${n.toFixed(n < 10 ? 2 : 0).replace(".", ",")} $`;
 
+/** Le robots.txt du site autorise-t-il FightNewsBot à lire ce flux ? (règles Allow / Disallow, jokers * et $) */
+async function robotsAllows(feedUrl: string): Promise<boolean> {
+  const url = new URL(feedUrl);
+  let text: string;
+  try {
+    const res = await fetch(`${url.origin}/robots.txt`, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return true; // pas de robots.txt : rien n'est interdit
+    text = await res.text();
+  } catch {
+    return true; // injoignable : la lecture du flux dira si le site répond
+  }
+  // Blocs "User-agent" + règles. On applique le bloc qui nous nomme, sinon celui de "*".
+  const groups: { agents: string[]; rules: { allow: boolean; path: string }[] }[] = [];
+  let readingAgents = false;
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^\s*([\w-]+)\s*:\s*(.*?)\s*(#.*)?$/.exec(line);
+    if (!m) continue;
+    const key = m[1].toLowerCase();
+    if (key === "user-agent") {
+      if (!readingAgents) groups.push({ agents: [], rules: [] });
+      groups[groups.length - 1].agents.push(m[2].toLowerCase());
+      readingAgents = true;
+      continue;
+    }
+    readingAgents = false;
+    if ((key === "allow" || key === "disallow") && m[2] && groups.length) {
+      groups[groups.length - 1].rules.push({ allow: key === "allow", path: m[2] });
+    }
+  }
+  const ours = groups.filter((g) => g.agents.includes("fightnewsbot"));
+  const rules = (ours.length ? ours : groups.filter((g) => g.agents.includes("*"))).flatMap((g) => g.rules);
+  // La règle la plus longue qui correspond l'emporte ; à égalité, Allow gagne.
+  const path = url.pathname + url.search;
+  let best: { allow: boolean; length: number } | undefined;
+  for (const r of rules) {
+    const re = new RegExp("^" + r.path.split("*").map(escapeRe).join(".*").replace(/\\\$$/, "$"));
+    if (re.test(path) && (!best || r.path.length > best.length || (r.path.length === best.length && r.allow))) {
+      best = { allow: r.allow, length: r.path.length };
+    }
+  }
+  return best?.allow ?? true;
+}
+
 async function check(s: Source): Promise<Result> {
   const base = { name: s.name, sport: s.sport, official: Boolean(s.official), url: s.url, lastDay: [] as string[] };
+  if (!(await robotsAllows(s.url))) return { ...base, ok: false, items: 0, error: "le site interdit aux robots de lire ce flux (robots.txt)" };
   try {
-    const feed = await parser.parseURL(s.url);
+    const feed = await readFeed(s.url);
     const dated = feed.items
       .map((it) => ({ title: it.title ?? "", link: it.link ?? "", date: itemDate(it.isoDate ?? it.pubDate) }))
       .sort((a, b) => b.date.localeCompare(a.date));

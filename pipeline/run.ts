@@ -11,7 +11,7 @@
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, itemDate, parser, publisherOf, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readFeed, type Source } from "./feeds";
 import { SPORTS } from "../lib/sports";
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -31,7 +31,7 @@ async function fetchAll(): Promise<Item[]> {
   const perSource = await eachSource(async (source) => {
     const items: Item[] = [];
     try {
-      const feed = await parser.parseURL(source.url);
+      const feed = await readFeed(source.url);
       for (const it of feed.items) {
         if (!it.link || !it.title) continue;
         const date = itemDate(it.isoDate ?? it.pubDate);
