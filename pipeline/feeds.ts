@@ -90,29 +90,21 @@ export async function readFeed(url: string) {
   }
 }
 
-// Deux défauts courants font refuser tout le flux au lecteur XML : un bloc <![CDATA[…]]> glissé dans un contenu
-// déjà en CDATA, qui le coupe en deux (c'est le cas de l'IMMAF), et du HTML brut hors CDATA (<br>, <img> sans fin
-// de balise). On garde le texte du bloc imbriqué sans ses marques, et on ferme ces balises, avant de réessayer.
+// Deux défauts courants font refuser tout le flux au lecteur XML :
+// - un bloc <![CDATA[…]]> glissé dans un contenu déjà en CDATA : son ]]> coupe le contenu en deux (flux de l'IMMAF).
+//   Le vrai bloc d'un élément se termine au ]]> suivi de la balise fermante de cet élément : les marques
+//   CDATA trouvées avant sont retirées, le texte reste ;
+// - du HTML brut hors CDATA (<br>, <img> sans fin de balise) : on ferme ces balises.
 function repairXml(xml: string) {
-  return flattenCdata(xml)
+  return xml
+    .replace(/(<([\w:.-]+)[^>]*>\s*<!\[CDATA\[)([\s\S]*?)(\]\]>\s*<\/\2>)/g, (_, start: string, _tag: string, body: string, end: string) => {
+      // "]]]]><![CDATA[>" est la bonne façon d'écrire "]]>" dans un bloc CDATA : on la garde.
+      const text = body.replace(/\]\]\]\]><!\[CDATA\[>|<!\[CDATA\[|\]\]>/g, (m) => (m === "]]>" || m === "<![CDATA[" ? "" : "]]>"));
+      return start + text.replace(/\]\]>/g, "]]]]><![CDATA[>") + end;
+    })
     .split(/(<!\[CDATA\[[\s\S]*?\]\]>)/)
     .map((part, i) => (i % 2 ? part : part.replace(/<(br|hr|img|input|wbr|col|area|embed|meta)\b([^>]*?)\s*\/?>/gi, "<$1$2/>")))
     .join("");
-}
-
-function flattenCdata(xml: string) {
-  const marks = /<!\[CDATA\[|\]\]>/g;
-  let out = "";
-  let depth = 0;
-  let last = 0;
-  for (let m = marks.exec(xml); m; m = marks.exec(xml)) {
-    const open = m[0] !== "]]>";
-    out += xml.slice(last, m.index);
-    if (open ? depth === 0 : depth <= 1) out += m[0]; // seules les marques du bloc extérieur restent
-    depth = open ? depth + 1 : Math.max(0, depth - 1);
-    last = marks.lastIndex;
-  }
-  return out + xml.slice(last);
 }
 
 // "Unexpected close tag\nLine: 57\nColumn: 80…" devient un message qui montre l'endroit fautif du flux.
