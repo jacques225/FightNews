@@ -36,8 +36,8 @@ const HEADERS = {
 const parse = (xml: string) =>
   new Parser<Record<string, never>, { sourceEl?: SourceEl }>({ customFields: { item: [["source", "sourceEl"]] } }).parseString(xml);
 
-/** Le site n'a pas répondu à temps : souvent passager (site lent ou surchargé). */
-export class TimeoutError extends Error {}
+/** Site momentanément indisponible (pas de réponse à temps, erreur de son serveur) : souvent passager. */
+export class UnavailableError extends Error {}
 
 /**
  * Télécharge une adresse (flux ou robots.txt), en suivant jusqu'à 5 redirections.
@@ -65,7 +65,7 @@ export function download(url: string, redirects = 0): Promise<{ status: number; 
         reject(e);
       });
     });
-    const deadline = setTimeout(() => req.destroy(new TimeoutError("pas de réponse en 20 s")), 20_000);
+    const deadline = setTimeout(() => req.destroy(new UnavailableError("pas de réponse en 20 s")), 20_000);
     req.on("error", (e) => {
       clearTimeout(deadline);
       reject(e);
@@ -76,6 +76,7 @@ export function download(url: string, redirects = 0): Promise<{ status: number; 
 /** Télécharge et lit un flux RSS ou Atom. */
 export async function readFeed(url: string) {
   const res = await download(url);
+  if (res.status >= 500) throw new UnavailableError(`erreur ${res.status} du serveur du site`);
   if (res.status >= 300) throw new Error(`Status code ${res.status}`);
   const xml = decode(res.body, res.contentType).replace(/^\uFEFF/, "");
   // Certains sites renvoient une page web (souvent une protection anti-robots) à la place du flux.
