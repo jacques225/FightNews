@@ -165,7 +165,8 @@ Mets `"official": true` seulement pour une fédération ou une organisation.
 Elle tourne aussi chaque lundi et à chaque modification de la liste. Le tableau affiché sur sa page donne,
 pour chaque flux, s'il répond, combien d'articles il a publiés ces dernières 24 h et la date du dernier,
 et signale un site qui interdit aux robots de lire son flux. Il estime aussi le nombre d'infos par jour
-et le coût de l'IA. La tâche passe en rouge quand un flux est en panne : c'est le moment de le retirer ou de le remplacer.
+et le coût de l'IA. Un flux qui ne répond pas est réessayé une fois ; s'il reste en panne, la tâche passe en rouge :
+c'est le moment de le retirer ou de le remplacer.
 
 ## Coût estimé
 

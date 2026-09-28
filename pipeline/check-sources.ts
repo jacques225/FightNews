@@ -76,12 +76,22 @@ async function robotsForbids(feedUrl: string): Promise<string | null> {
   return best && !best.allow ? `Disallow: ${best.path}` : null;
 }
 
+// Un site peut être lent ou indisponible un instant : on réessaie une fois avant de le compter en panne.
+async function readFeedTwice(url: string) {
+  try {
+    return await readFeed(url);
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    return readFeed(url);
+  }
+}
+
 async function check(s: Source): Promise<Result> {
   const base = { name: s.name, sport: s.sport, official: Boolean(s.official), url: s.url, lastDay: [] as string[] };
   const forbidden = await robotsForbids(s.url);
   if (forbidden) return { ...base, ok: false, items: 0, error: `le site interdit aux robots de lire ce flux (robots.txt : « ${forbidden} »)` };
   try {
-    const feed = await readFeed(s.url);
+    const feed = await readFeedTwice(s.url);
     const dated = feed.items
       .map((it) => ({ title: it.title ?? "", link: it.link ?? "", date: itemDate(it.isoDate ?? it.pubDate) }))
       .sort((a, b) => b.date.localeCompare(a.date));
