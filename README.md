@@ -4,6 +4,8 @@ Site d'actualité de tous les sports de combat, mis à jour automatiquement :
 les flux RSS sont lus toutes les 30 minutes, une IA rédige une brève originale en français
 pour chaque nouvelle info, la range dans la bonne rubrique (dont une rubrique **Lifestyle**
 pour les collections, l'équipement et la culture fight) et cite le média d'origine.
+L'IA est facultative : sans clé Claude, chaque info est reprise avec son titre, un court extrait
+et un lien vers l'article de son média.
 Les sources officielles (fédérations, organisations) sont signalées par un badge **Officiel**.
 Rien n'est effacé : toutes les anciennes actus restent consultables, rubrique par rubrique, page après page.
 Chaque vendredi, les abonnés reçoivent **le récap de la semaine** par e-mail.
@@ -13,6 +15,7 @@ Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
                │  1. lit les flux        (pipeline/sources.json)
                │  2. ignore les liens déjà vus
                │  3. IA : résumé original + rubrique + tags, écarte les doublons
+               │     (sans IA : titre + court extrait de la source)
                ▼
            Supabase (table "articles", en brouillon par défaut)
                │                                   │
@@ -73,8 +76,9 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
 1. **Base de données.** Crée un projet gratuit sur [supabase.com](https://supabase.com),
    ouvre *SQL Editor*, colle le contenu de `supabase/schema.sql` et lance-le.
    Ce fichier peut être relancé sans risque après chaque mise à jour du projet.
-2. **IA.** Crée une clé sur [console.anthropic.com](https://console.anthropic.com)
-   et ajoute quelques euros de crédit.
+2. **IA (facultatif).** Crée une clé sur [console.anthropic.com](https://console.anthropic.com)
+   et ajoute quelques euros de crédit. Sans clé, le robot enregistre le titre, un court extrait et le lien
+   de chaque info, dans la langue de sa source. La rubrique Lifestyle reste alors vide : c'est l'IA qui y range les infos.
 3. **Clés.** Copie `.env.example` en `.env.local` et remplis-le
    (Supabase : *Project settings > API Keys*).
 4. **Premier test.**
@@ -89,10 +93,11 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
 ## 3. Mettre en ligne et automatiser
 
 1. Dans le dépôt GitHub : *Settings > Secrets and variables > Actions*, onglet *Secrets*, ajoute
-   `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` et `ANTHROPIC_API_KEY`.
+   `NEXT_PUBLIC_SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`, plus `ANTHROPIC_API_KEY` si tu utilises l'IA.
    Puis, dans l'onglet *Variables* du même écran, crée `PIPELINE_ENABLED` avec la valeur `true`.
    Le robot tourne alors toutes les 30 minutes (onglet *Actions*, bouton *Run workflow* pour le lancer à la main).
    S'il manque un secret, le passage s'arrête en rouge et son journal donne le nom du secret à ajouter.
+   Si Claude refuse la clé (clé invalide, plus de crédit), le passage continue sans IA et son journal le signale.
 2. Sur [vercel.com](https://vercel.com), importe le dépôt et ajoute les variables
    `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Le site est en ligne.
 
@@ -139,7 +144,8 @@ En **gras**, les sources officielles (fédérations, organisations) : leurs arti
 | Lutte | **FFLDA** |
 
 Les médias généralistes parlent aussi des autres sports : l'IA range chaque info dans la bonne rubrique,
-quelle que soit la source.
+quelle que soit la source. Sans IA, l'info reste dans la rubrique de son flux, sauf si son titre commence
+par le nom d'un sport (« Boxe : … »).
 
 Ce qui manque, et pourquoi :
 - **FMMAF** : son site n'a rien publié depuis août 2025. Le MMA dépend de la FFBoxe depuis 2020 (délégation
@@ -159,7 +165,7 @@ Ce qui manque, et pourquoi :
 { "name": "Nom affiché sur le site", "url": "https://exemple.com/feed/", "sport": "mma", "official": true }
 ```
 
-`sport` est la rubrique proposée à l'IA (`mma`, `boxe`, `kickboxing`, `muay-thai`, `judo`, `grappling`, `lutte`, `lifestyle`).
+`sport` est la rubrique proposée à l'IA, et celle retenue sans IA (`mma`, `boxe`, `kickboxing`, `muay-thai`, `judo`, `grappling`, `lutte`, `lifestyle`).
 Mets `"official": true` seulement pour une fédération ou une organisation.
 
 **Vérifier les sources** : onglet *Actions* du dépôt, tâche *Vérifier les sources*, bouton *Run workflow*.
@@ -175,7 +181,7 @@ en erreur) est signalé « à surveiller » sans faire passer la tâche en rouge
 | Poste | Prix |
 |---|---|
 | Vercel, Supabase, GitHub Actions | 0 € au départ (offres gratuites) |
-| IA (Claude Haiku 4.5, 25 infos max par passage) | environ 10 $ par mois avec les sources actuelles (recalculé par *Vérifier les sources*) |
+| IA, facultative (Claude Haiku 4.5, 25 infos max par passage) | 0 € sans IA ; avec, environ 10 $ par mois avec les sources actuelles (recalculé par *Vérifier les sources*) |
 | Resend (e-mails) | gratuit pour démarrer (quelques milliers d'e-mails par mois), payant au-delà |
 | Nom de domaine | ~10 € par an |
 
@@ -186,6 +192,7 @@ Estimation indicative : vérifie les tarifs du moment sur chaque service.
 - L'IA a pour consigne de **reformuler**, de ne rien inventer, et de faire court si la source est maigre.
 - En **Lifestyle**, elle reste informative, sans ton publicitaire, et ne donne un prix ou une date de sortie
   que s'ils figurent dans la source.
+- Sans IA, seuls **le titre et un extrait de moins de 300 caractères** sont repris, avec un bouton vers l'article complet.
 - Chaque article affiche **le média d'origine avec un lien**, et le badge « Source officielle »
   quand l'info vient d'une fédération ou d'une organisation.
 - **Aucune photo des sources n'est reprise** (droits d'auteur) : les cartes utilisent un dégradé aux couleurs de la rubrique.

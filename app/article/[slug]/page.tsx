@@ -13,7 +13,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const a = await getArticle((await params).slug);
-  return a ? { title: a.title, description: a.summary } : {};
+  return a ? { title: a.title, description: a.summary || undefined } : {};
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -28,8 +28,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <Link href={`/${article.sport}`} className="badge" style={{ background: sport?.color }}>{sport?.name}</Link>
         <h1>{article.title}</h1>
         <p className="meta">Publié le {fullDate(article.published_at)}</p>
-        <p className="lead">{article.summary}</p>
-        {article.body.split("\n\n").map((p, i) => <p key={i}>{p}</p>)}
+        {article.summary && <p className="lead">{article.summary}</p>}
+        {article.body ? (
+          article.body.split("\n\n").map((p, i) => <p key={i}>{p}</p>)
+        ) : (
+          // Brève enregistrée sans IA : juste un extrait, l'article complet est chez son média.
+          <p>
+            <a className="btn" href={article.source_url} target="_blank" rel="noopener">
+              Lire l'article complet sur {article.source_name}
+            </a>
+          </p>
+        )}
         <div className="source">
           Source : <a href={article.source_url} target="_blank" rel="noopener">{article.source_name}</a>
           {article.source_official && <span className="official">Source officielle</span>}
