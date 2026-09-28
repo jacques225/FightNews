@@ -15,6 +15,7 @@ export default async function ArticleListing({ sport: slug, page }: { sport?: st
   return (
     <>
       <div className="sport-banner" style={{ ["--c" as string]: sport?.color ?? "#e11d48" }}>
+        <span className="kicker">{sport ? "Rubrique" : "Archives"}</span>
         <h1>{sport ? sport.name : "Toute l'actu"}</h1>
         <p>
           {sport ? sport.description : "Toutes les rubriques, de la plus récente à la plus ancienne."}
