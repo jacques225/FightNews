@@ -1,0 +1,27 @@
+name: Newsletter hebdo
+
+on:
+  schedule:
+    - cron: "0 7 * * 5"   # vendredi 7 h UTC (9 h à Paris l'été, 8 h l'hiver)
+  workflow_dispatch: {}   # bouton "Run workflow" pour l'envoyer à la main
+
+jobs:
+  newsletter:
+    # Ne part tout seul qu'une fois la variable NEWSLETTER_ENABLED mise à "true".
+    if: ${{ vars.NEWSLETTER_ENABLED == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run newsletter
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NEWSLETTER_FROM: ${{ vars.NEWSLETTER_FROM }}
+          SITE_URL: ${{ vars.SITE_URL }}

@@ -6,8 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "pipeline": "tsx pipeline/run.ts",
-    "pipeline:dry": "tsx pipeline/run.ts --dry-run"
+    "pipeline": "tsx --env-file-if-exists=.env.local pipeline/run.ts",
+    "pipeline:dry": "tsx --env-file-if-exists=.env.local pipeline/run.ts --dry-run",
+    "newsletter": "tsx --env-file-if-exists=.env.local pipeline/newsletter.ts",
+    "newsletter:preview": "tsx --env-file-if-exists=.env.local pipeline/newsletter.ts --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",
@@ -15,12 +17,17 @@
     "next": "^15",
     "react": "^19",
     "react-dom": "^19",
-    "rss-parser": "^3"
+    "resend": "^6.30.0",
+    "rss-parser": "^3",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^22",
     "@types/react": "^19",
     "tsx": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }

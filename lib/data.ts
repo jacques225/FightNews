@@ -8,7 +8,9 @@ const supabase = url && key ? createClient(url, key) : null;
 
 export async function getLatest(limit = 30, sport?: string): Promise<Article[]> {
   if (!supabase) {
-    return DEMO_ARTICLES.filter((a) => !sport || a.sport === sport).slice(0, limit);
+    return DEMO_ARTICLES.filter((a) => !sport || a.sport === sport)
+      .sort((a, b) => b.published_at.localeCompare(a.published_at))
+      .slice(0, limit);
   }
   let q = supabase
     .from("articles")

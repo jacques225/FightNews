@@ -6,5 +6,8 @@
   { "name": "Google Actualités (muay thaï)", "url": "https://news.google.com/rss/search?q=%22muay+thai%22&hl=fr&gl=FR&ceid=FR:fr", "sport": "muay-thai" },
   { "name": "Google Actualités (judo)", "url": "https://news.google.com/rss/search?q=judo&hl=fr&gl=FR&ceid=FR:fr", "sport": "judo" },
   { "name": "Google Actualités (grappling)", "url": "https://news.google.com/rss/search?q=grappling+OR+ADCC+OR+jiu-jitsu&hl=fr&gl=FR&ceid=FR:fr", "sport": "grappling" },
-  { "name": "Google Actualités (lutte)", "url": "https://news.google.com/rss/search?q=lutte+gr%C3%A9co-romaine+OR+lutte+libre&hl=fr&gl=FR&ceid=FR:fr", "sport": "lutte" }
+  { "name": "Google Actualités (lutte)", "url": "https://news.google.com/rss/search?q=lutte+gr%C3%A9co-romaine+OR+lutte+libre&hl=fr&gl=FR&ceid=FR:fr", "sport": "lutte" },
+  { "name": "Google Actualités (marques fightwear)", "url": "https://news.google.com/rss/search?q=Venum+OR+Hayabusa+OR+RDX+OR+Everlast+collection&hl=fr&gl=FR&ceid=FR:fr", "sport": "lifestyle" },
+  { "name": "Google Actualités (équipement)", "url": "https://news.google.com/rss/search?q=%22gants+de+boxe%22+OR+%22fight+kit%22+OR+%22short+de+MMA%22&hl=fr&gl=FR&ceid=FR:fr", "sport": "lifestyle" },
+  { "name": "Google News (fightwear)", "url": "https://news.google.com/rss/search?q=%22fight+kit%22+OR+fightwear+OR+%22boxing+shoes%22&hl=en-US&gl=US&ceid=US:en", "sport": "lifestyle" }
 ]
