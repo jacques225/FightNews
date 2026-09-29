@@ -2,8 +2,18 @@ name: Mise à jour des actus
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # toutes les 30 minutes (heure UTC)
+    # Toutes les 30 minutes, à xx:07 et xx:37 (UTC), en dehors du début de l'heure.
+    # GitHub peut retarder les tâches planifiées : ce n'est pas du temps réel garanti.
+    - cron: "7,37 * * * *"
   workflow_dispatch: {}       # bouton "Run workflow" pour lancer à la main
+
+permissions:
+  contents: read
+
+# Un lancement manuel ne doit pas importer les mêmes liens en parallèle du robot.
+concurrency:
+  group: fightnews-rss
+  cancel-in-progress: false
 
 jobs:
   pipeline:
@@ -25,4 +35,4 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           AI_MODEL: claude-haiku-4-5
-          PIPELINE_DEFAULT_STATUS: draft
+          PIPELINE_DEFAULT_STATUS: ${{ vars.PIPELINE_DEFAULT_STATUS || 'published' }}
