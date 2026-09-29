@@ -30,6 +30,7 @@ type MediaEl = { $?: { url?: string; medium?: string; type?: string; width?: str
 
 /** Champs d'une info que rss-parser ne lit pas de lui-même. */
 export type ItemExtras = {
+  "content:encodedSnippet"?: string;
   sourceEl?: SourceEl;
   mediaContent?: MediaEl[];
   mediaThumbnail?: MediaEl[];
