@@ -132,7 +132,7 @@ function NewsletterBand() {
 function UpcomingBlock({ events }: { events: FightEvent[] }) {
   if (!events.length) return null;
   return (
-    <section className="section">
+    <section className="section section-compact">
       <div className="section-head">
         <h2>Prochains combats</h2>
         <Link href="/calendrier">Tout le calendrier <Arrow /></Link>
@@ -167,7 +167,7 @@ function SportBlock({ slug, articles }: { slug: string; articles: Article[] }) {
         <h2>{sport.name}</h2>
         <Link href={`/${sport.slug}`}>Tout voir <Arrow /></Link>
       </div>
-      <div className="grid">
+      <div className="grid grid-lead">
         {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
       </div>
     </section>
@@ -185,7 +185,7 @@ function LifestyleBlock({ articles }: { articles: Article[] }) {
         </div>
         <Link href={`/${LIFESTYLE}`}>Tout voir <Arrow /></Link>
       </div>
-      <div className="grid">
+      <div className="grid grid-lead">
         {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
       </div>
     </section>
