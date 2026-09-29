@@ -30,6 +30,7 @@ type MediaEl = { $?: { url?: string; medium?: string; type?: string; width?: str
 
 /** Champs d'une info que rss-parser ne lit pas de lui-même. */
 export type ItemExtras = {
+  "content:encodedSnippet"?: string;
   sourceEl?: SourceEl;
   mediaContent?: MediaEl[];
   mediaThumbnail?: MediaEl[];
@@ -167,7 +168,10 @@ export const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * Résumé en texte d'une info. Certains flux (MMA Fighting, Bad Left Hook) ouvrent leur contenu sur une photo
  * et sa légende (« LAS VEGAS, NEVADA - SEPTEMBER 26: … ») : on retire la photo pour garder le début de l'article.
  */
-export function snippetOf(content: string | undefined, contentSnippet: string | undefined): string {
+export function snippetOf(content: string | undefined, contentSnippet: string | undefined, encoded?: string, encodedSnippet?: string): string {
+  // WordPress peut fournir le texte uniquement dans content:encoded (ex. ActuMMA).
+  if (!content?.trim()) content = encoded;
+  if (!contentSnippet?.trim()) contentSnippet = encodedSnippet;
   if (!content || !/<figure\b/i.test(content)) return contentSnippet ?? "";
   const text = content.replace(/<(figure|script|style)\b[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]*>/g, " ");
   return decodeEntities(text).replace(/\s+/g, " ").trim();
