@@ -21,10 +21,11 @@ Flux RSS français → GitHub Actions (xx:07 et xx:37 UTC)
 
 ```
 app/
-  page.tsx                   Accueil : la une, la newsletter, un bloc par sport, le bloc Lifestyle
+  page.tsx                   Accueil : la une, les prochains combats, la newsletter, un bloc par sport, le bloc Lifestyle
   [sport]/page.tsx           Une page par rubrique (/mma, /boxe, /lifestyle…)
   [sport]/page/[n]/          Ses archives, page après page (/mma/page/2…)
   actus/                     Toute l'actu, toutes rubriques confondues, avec ses archives
+  calendrier/page.tsx        Calendrier des combats, lu sur Wikipédia (voir « Le calendrier » plus bas)
   article/[slug]/page.tsx    Page article, avec la source et les actus précédentes de la rubrique
   newsletter/                Page d'inscription et page de désabonnement
   api/newsletter/            Inscription, confirmation et désabonnement
@@ -35,11 +36,15 @@ lib/
   sports.ts                  Liste des rubriques : ajoute ou renomme une rubrique ici
   data.ts                    Lecture des articles (Supabase, ou démo si rien n'est configuré)
   demo.ts                    Articles fictifs pour voir le design sans rien brancher
+  calendar.ts                Calendrier : organisations suivies, lecture de Wikipédia, libellés en français
+  wikitext.ts                Lecture des pages Wikipédia (tableaux, cartes de combats, dates)
   email.ts                   Envoi des e-mails et modèles (confirmation, récap)
 pipeline/
   run.ts                     Le robot : RSS français → courts extraits → base de données
   sources.json               Les flux suivis (voir « Les sources » plus bas)
   check-sources.ts           Vérifie que chaque flux répond
+  calendar-check.ts          Vérifie la lecture du calendrier sur Wikipédia
+  *.test.ts                  Tests automatiques (npm test), avec des extraits réels dans fixtures/
   newsletter.ts              Le récap hebdo
 supabase/schema.sql          Les tables à créer dans Supabase
 .github/workflows/           Les tâches planifiées (robot, récap) et les vérifications
@@ -159,6 +164,22 @@ Elle contrôle le flux, robots.txt, les dates et les photos, puis indique les so
 Elle s'exécute également chaque lundi et lorsque la configuration des sources change.
 Une erreur temporaire d'un média n'empêche pas le robot d'importer les autres sources.
 
+## Le calendrier
+
+La page `/calendrier` et l'encart « Prochains combats » de l'accueil listent les prochains galas de l'UFC, du PFL,
+de ONE, du KSW, d'Oktagon, de Cage Warriors, du Rizin, de Brave CF et de Glory, avec leur carte quand elle est annoncée.
+
+- **Source** : Wikipédia en anglais (listes d'événements et pages de chaque gala), gratuite et sans clé.
+  Sa licence (CC BY-SA 4.0) oblige à la citer : la mention en bas de la page Calendrier et le lien vers la fiche
+  de chaque gala doivent rester.
+- **Mise à jour** : chaque page Wikipédia est relue au plus toutes les 6 heures, la page du site toutes les heures.
+  Un gala reste affiché jusqu'au lendemain matin ; le soir même, les combats disputés affichent leur vainqueur.
+- **Limites** : Wikipédia ne donne pas les horaires, seulement la date du pays de l'événement. Les petites soirées
+  sans page Wikipédia ne sont pas listées, et une carte peut changer jusqu'au dernier moment.
+- **Ajouter une organisation** : une ligne dans `SOURCES`, dans `lib/calendar.ts` (page Wikipédia et section du tableau).
+- **Vérification** : `npm run calendar:check`, ou la tâche GitHub « Vérifier les sources », qui lit aussi le calendrier.
+  Elle échoue si une page ne peut plus être lue (mise en page de Wikipédia modifiée).
+
 ## Coût et contenu
 
 - Traitement RSS : aucun coût d'IA. Au plus 25 nouvelles entrées par passage.
@@ -172,6 +193,6 @@ Une erreur temporaire d'un média n'empêche pas le robot d'importer les autres 
 ## Pistes pour la suite
 
 - Une page d'administration pour valider les brouillons en un clic.
-- Un calendrier des événements et des fiches combattants.
+- Des fiches combattants, et les horaires des galas (source payante).
 - La recherche et un plan du site pour Google (sitemap).
 - Le regroupement des articles qui parlent du même événement.

@@ -1,8 +1,8 @@
 name: Vérifier les sources
 
-# Teste chaque flux RSS depuis GitHub (le même réseau que le robot) :
-# à chaque modification des sources, chaque lundi, ou à la main (bouton "Run workflow").
-# Le tableau des résultats s'affiche sur la page de la tâche.
+# Teste chaque flux RSS depuis GitHub (le même réseau que le robot), et la lecture du calendrier
+# des combats sur Wikipédia : à chaque modification, chaque lundi, ou à la main (bouton "Run workflow").
+# Les tableaux des résultats s'affichent sur la page de la tâche.
 on:
   workflow_dispatch: {}
   push:
@@ -10,6 +10,9 @@ on:
       - "pipeline/sources.json"
       - "pipeline/feeds.ts"
       - "pipeline/check-sources.ts"
+      - "lib/calendar.ts"
+      - "lib/wikitext.ts"
+      - "pipeline/calendar-check.ts"
   schedule:
     - cron: "0 6 * * 1"
 
@@ -25,3 +28,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run sources:check
+
+  calendar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run calendar:check
