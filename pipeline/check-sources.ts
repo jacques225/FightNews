@@ -13,10 +13,10 @@ const STALE_DAYS = 30;
 const DAY = 86400_000;
 // Le robot passe toutes les 30 minutes (.github/workflows/pipeline.yml).
 const MAX_PER_DAY = MAX_NEW_PER_RUN * 48;
-// Une brève avec Claude Haiku 4.5 (1 $ le million de tokens lus, 5 $ le million écrits) :
-// environ 1 600 tokens lus (consignes, extrait, titres déjà publiés) et 350 écrits, soit 0,0034 $.
+// Une brève avec GPT-6 Luna (0,10 $ le million de tokens lus, 0,50 $ le million écrits) :
+// environ 1 600 tokens lus (consignes, extrait, titres déjà publiés) et 350 écrits, soit 0,000335 $.
 // À revoir si tu changes AI_MODEL.
-const COST_PER_ITEM_USD = (1600 * 1 + 350 * 5) / 1_000_000;
+const COST_PER_ITEM_USD = (1600 * 0.1 + 350 * 0.5) / 1_000_000;
 
 type Result = {
   name: string; sport: string; official: boolean; url: string;
@@ -137,7 +137,7 @@ async function main() {
     `≈ ${perDay} nouvelles infos par jour` +
     (full ? ` (au moins : ${full} flux n'affichent que leurs derniers articles)` : "") +
     (perDay > MAX_PER_DAY ? `. Le robot en traite au plus ${MAX_PER_DAY} (${MAX_NEW_PER_RUN} par passage), les plus récentes d'abord` : "");
-  const cost = `Coût IA estimé (Claude Haiku 4.5) : ${usd(treated * COST_PER_ITEM_USD)} par jour, soit ${usd(treated * COST_PER_ITEM_USD * 30)} par mois`;
+  const cost = `Coût IA estimé (GPT-6 Luna, hors reprise des anciens extraits) : ${usd(treated * COST_PER_ITEM_USD)} par jour, soit ${usd(treated * COST_PER_ITEM_USD * 30)} par mois`;
 
   console.log(`\n${results.length} sources : ${results.length - broken - stale - unavailable} OK, ${stale} inactives, ${unavailable} indisponibles, ${broken} en panne.`);
   console.log(`${volume}.\n${cost}.`);
