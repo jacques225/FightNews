@@ -24,7 +24,7 @@ async function fetchAll(): Promise<Item[]> {
         const date = itemDate(it.isoDate ?? it.pubDate);
         if (Date.now() - new Date(date).getTime() > MAX_AGE_HOURS * 3600_000) continue;
         const { publisher, title } = publisherOf(it.sourceEl, it.title, source.name);
-        const snippet = snippetOf(it.content, it.contentSnippet).slice(0, 1500);
+        const snippet = snippetOf(it.content, it.contentSnippet, it["content:encoded"], it["content:encodedSnippet"]).slice(0, 1500);
         items.push({ title, link: it.link, snippet, image: imageOf(it), date, publisher, source });
       }
       console.log(`✓ ${source.name} : ${feed.items.length} entrées`);
@@ -62,6 +62,29 @@ async function addMissingImages(items: Item[], known: Map<string, boolean>) {
     else added++;
   }
   if (added) console.log(`${added} photos ajoutées à des infos déjà enregistrées`);
+}
+
+/** Complète les imports dont le flux plaçait l'extrait dans content:encoded. */
+async function addMissingExcerpts(items: Item[]) {
+  if (!supabase || DRY_RUN) return;
+  let added = 0;
+  for (let i = 0; i < items.length; i += 200) {
+    const batch = items.slice(i, i + 200);
+    const { data, error } = await supabase.from("articles").select("id,source_url,title")
+      .eq("summary", "").eq("body", "").in("status", ["draft", "published"])
+      .in("source_url", batch.map((item) => item.link));
+    if (error) throw error;
+    for (const row of data) {
+      const item = batch.find((item) => item.link === row.source_url)!;
+      const summary = excerpt(item.snippet, row.title);
+      if (!summary) continue;
+      const { data: saved, error } = await supabase.from("articles").update({ summary })
+        .eq("id", row.id).eq("summary", "").eq("body", "").in("status", ["draft", "published"]).select("id");
+      if (error) throw error;
+      added += saved.length;
+    }
+  }
+  console.log(`${added} extraits manquants complétés`);
 }
 
 /** Titres publiés ou en brouillon ces dernières 48 h, par rubrique : sert à repérer les doublons. */
@@ -120,6 +143,7 @@ async function main() {
   const unique = [...new Map(all.map((i) => [i.link, i])).values()];
   const known = await knownLinks(unique);
   await addMissingImages(unique, known);
+  await addMissingExcerpts(unique);
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
   const fresh = unique
     .filter((i) => !known.has(i.link))
