@@ -7,7 +7,7 @@
  * Usage : npm run sources:check
  */
 import { appendFileSync } from "node:fs";
-import { MAX_NEW_PER_RUN, UnavailableError, download, eachSource, escapeRe, itemDate, readFeed, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, UnavailableError, download, eachSource, escapeRe, imageOf, itemDate, readFeed, type Source } from "./feeds";
 
 const STALE_DAYS = 30;
 const DAY = 86400_000;
@@ -21,6 +21,7 @@ const COST_PER_ITEM_USD = (1600 * 1 + 350 * 5) / 1_000_000;
 type Result = {
   name: string; sport: string; official: boolean; url: string;
   ok: boolean; items: number; lastDay: string[]; latest?: string; title?: string; error?: string;
+  photos?: number; photo?: string; // articles avec une photo fournie dans le flux, et un exemple
   unavailable?: boolean; // indisponible deux fois de suite (délai dépassé, erreur 5xx) : à surveiller, souvent passager
 };
 
@@ -94,12 +95,13 @@ async function check(s: Source): Promise<Result> {
   try {
     const feed = await readFeedTwice(s.url);
     const dated = feed.items
-      .map((it) => ({ title: it.title ?? "", link: it.link ?? "", date: itemDate(it.isoDate ?? it.pubDate) }))
+      .map((it) => ({ title: it.title ?? "", link: it.link ?? "", date: itemDate(it.isoDate ?? it.pubDate), photo: imageOf(it) }))
       .sort((a, b) => b.date.localeCompare(a.date));
     const lastDay = dated.filter((d) => d.link && Date.now() - new Date(d.date).getTime() < DAY).map((d) => d.link);
     return {
       ...base, ok: feed.items.length > 0, items: feed.items.length, lastDay,
       latest: dated[0]?.date, title: dated[0]?.title, error: feed.items.length ? undefined : "flux vide",
+      photos: dated.filter((d) => d.photo).length, photo: dated.find((d) => d.photo)?.photo,
     };
   } catch (e) {
     return { ...base, ok: false, items: 0, unavailable: e instanceof UnavailableError, error: (e as Error).message.split("\n")[0].slice(0, 120) };
@@ -125,7 +127,8 @@ async function main() {
       stale++;
       console.log(`⚠ ${tag} : ${r.items} articles, mais le plus récent date de ${age(r.latest!)}\n    ${r.url}`);
     } else {
-      console.log(`✓ ${tag} : ${r.items} articles (${day}), le plus récent il y a ${age(r.latest!)} : ${r.title}`);
+      console.log(`✓ ${tag} : ${r.items} articles (${day}, ${r.photos} avec photo), le plus récent il y a ${age(r.latest!)} : ${r.title}`);
+      if (r.photo) console.log(`    photo : ${r.photo}`);
     }
   }
 
@@ -148,7 +151,7 @@ async function main() {
     const rows = results.map((r) => {
       const state = r.unavailable ? "⚠️ indisponible" : !r.ok ? "❌ en panne" : isStale(r) ? "⚠️ inactive" : "✅ OK";
       const detail = r.ok
-        ? `${r.items} articles, ${r.lastDay.length}${isFull(r) ? "+" : ""} en 24 h, dernier il y a ${age(r.latest!)}`
+        ? `${r.items} articles, ${r.lastDay.length}${isFull(r) ? "+" : ""} en 24 h, ${r.photos} avec photo, dernier il y a ${age(r.latest!)}`
         : cell(r.error ?? "");
       return `| ${state} | ${r.sport} | ${cell(r.name)}${r.official ? " (officiel)" : ""} | ${detail} |`;
     });

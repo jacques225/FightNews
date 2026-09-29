@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SourcePhoto from "@/components/SourcePhoto";
 import type { Article } from "@/lib/types";
 import { getSport } from "@/lib/sports";
 import { timeAgo } from "@/lib/data";
@@ -12,14 +13,11 @@ export default function ArticleCard({ article, large = false }: { article: Artic
       className={`card ${large ? "card-large" : ""}`}
       style={{ ["--c" as string]: color }}
     >
-      <div className={`card-img ${article.image_url ? "" : "card-img-empty"}`}>
-        {article.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={article.image_url} alt="" loading={large ? "eager" : "lazy"} />
-        ) : (
-          // Visuel de repli tant que l'article n'a pas de photo : initiales de la rubrique en filigrane
-          <span className="card-watermark" aria-hidden="true">{sport?.short}</span>
-        )}
+      {/* Visuel de repli (initiales de la rubrique en filigrane) sous la photo du média :
+          il reste visible tant que la photo charge, ou si elle ne s'affiche pas. */}
+      <div className="card-img card-img-empty">
+        <span className="card-watermark" aria-hidden="true">{sport?.short}</span>
+        {article.image_url && <SourcePhoto src={article.image_url} eager={large} />}
         <span className="badge">{sport?.short}</span>
         {article.source_official && <span className="official official-card">Officiel</span>}
       </div>
