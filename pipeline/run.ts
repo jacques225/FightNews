@@ -5,21 +5,21 @@
  * 3. demande à l'IA un résumé original en français + la rubrique + des tags,
  *    en lui donnant les titres déjà publiés pour qu'elle écarte les doublons.
  *    Sans clé Claude (ou si Claude la refuse), reprend le titre et un court extrait de la source
- * 4. enregistre dans Supabase (en brouillon par défaut)
+ * 4. enregistre dans Supabase (en brouillon par défaut), avec la photo que le média fournit dans son flux
  *
  * Usage : npm run pipeline          (normal)
  *         npm run pipeline:dry      (affiche ce qui serait fait, n'écrit rien)
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readFeed, snippetOf, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, eachSource, imageOf, itemDate, publisherOf, readFeed, snippetOf, type Source } from "./feeds";
 import { SPORTS } from "../lib/sports";
 import { excerpt, isRepeat, sportOf } from "./without-ai";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const MAX_AGE_HOURS = 48;
 
-type Item = { title: string; link: string; snippet: string; date: string; publisher: string; source: Source };
+type Item = { title: string; link: string; snippet: string; image?: string; date: string; publisher: string; source: Source };
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -40,7 +40,8 @@ async function fetchAll(): Promise<Item[]> {
         const date = itemDate(it.isoDate ?? it.pubDate);
         if (Date.now() - new Date(date).getTime() > MAX_AGE_HOURS * 3600_000) continue;
         const { publisher, title } = publisherOf(it.sourceEl, it.title, source.name);
-        items.push({ title, link: it.link, snippet: snippetOf(it.content, it.contentSnippet).slice(0, 1500), date, publisher, source });
+        const snippet = snippetOf(it.content, it.contentSnippet).slice(0, 1500);
+        items.push({ title, link: it.link, snippet, image: imageOf(it), date, publisher, source });
       }
       console.log(`✓ ${source.name} : ${feed.items.length} entrées`);
     } catch (e) {
@@ -51,19 +52,32 @@ async function fetchAll(): Promise<Item[]> {
   return perSource.flat();
 }
 
-async function filterNew(items: Item[]): Promise<Item[]> {
-  const unique = [...new Map(items.map((i) => [i.link, i])).values()];
-  if (!supabase) return unique;
-  const seen = new Set<string>();
-  for (let i = 0; i < unique.length; i += 200) {
+/** Liens déjà en base (publiés, en brouillon ou écartés), avec pour chacun : reste-t-il une photo à ajouter ? */
+async function knownLinks(items: Item[]): Promise<Map<string, boolean>> {
+  const known = new Map<string, boolean>();
+  if (!supabase) return known;
+  for (let i = 0; i < items.length; i += 200) {
     const { data, error } = await supabase
       .from("articles")
-      .select("source_url")
-      .in("source_url", unique.slice(i, i + 200).map((u) => u.link));
+      .select("source_url, image_url, status")
+      .in("source_url", items.slice(i, i + 200).map((u) => u.link));
     if (error) throw error;
-    data.forEach((r) => seen.add(r.source_url));
+    data.forEach((r) => known.set(r.source_url, !r.image_url && r.status !== "rejected"));
   }
-  return unique.filter((i) => !seen.has(i.link));
+  return known;
+}
+
+/** Infos déjà enregistrées sans photo (avant que le robot reprenne celles des flux) : on ajoute celle du flux. */
+async function addMissingImages(items: Item[], known: Map<string, boolean>) {
+  if (!supabase || DRY_RUN) return;
+  let added = 0;
+  for (const item of items) {
+    if (!item.image || !known.get(item.link)) continue;
+    const { error } = await supabase.from("articles").update({ image_url: item.image }).eq("source_url", item.link).is("image_url", null);
+    if (error) console.warn(`  photo non ajoutée (${item.link}) : ${error.message}`);
+    else added++;
+  }
+  if (added) console.log(`${added} photos ajoutées à des infos déjà enregistrées`);
 }
 
 /** Titres publiés ou en brouillon ces dernières 48 h, par rubrique : sert à repérer les doublons. */
@@ -170,8 +184,12 @@ async function main() {
   if (!ai) console.log("Sans clé Claude : chaque info est enregistrée avec son titre, un court extrait et le lien de sa source.\n");
 
   const all = await fetchAll();
+  const unique = [...new Map(all.map((i) => [i.link, i])).values()];
+  const known = await knownLinks(unique);
+  await addMissingImages(unique, known);
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
-  const fresh = (await filterNew(all))
+  const fresh = unique
+    .filter((i) => !known.has(i.link))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, MAX_NEW_PER_RUN);
   console.log(`\n${all.length} entrées récentes, ${fresh.length} nouvelles à traiter${DRY_RUN ? " (dry-run)" : ""}\n`);
@@ -180,6 +198,7 @@ async function main() {
   for (const item of fresh) {
     if (DRY_RUN) {
       console.log(`• [${item.source.sport}]${item.source.official ? " [officiel]" : ""} ${item.title} (${item.publisher})\n  ${item.link}`);
+      if (item.image) console.log(`  photo : ${item.image}`);
       continue;
     }
     let r: Rewrite | null = null;
@@ -216,7 +235,7 @@ async function main() {
     const row = {
       slug: `${slugify(content.title)}-${Date.now().toString(36)}`,
       ...content,
-      image_url: null, // les photos des sources ne sont pas réutilisées (droits d'auteur)
+      image_url: item.image ?? null, // photo fournie par le média dans son flux, affichée depuis son serveur
       source_name: item.publisher,
       source_url: item.link,
       source_official: Boolean(item.source.official),

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
+import SourcePhoto from "@/components/SourcePhoto";
 import { fullDate, getArticle, getEarlier } from "@/lib/data";
 import { getSport } from "@/lib/sports";
 
@@ -28,6 +29,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <Link href={`/${article.sport}`} className="badge" style={{ background: sport?.color }}>{sport?.name}</Link>
         <h1>{article.title}</h1>
         <p className="meta">Publié le {fullDate(article.published_at)}</p>
+        {article.image_url && <SourcePhoto src={article.image_url} credit={article.source_name} eager />}
         {article.summary && <p className="lead">{article.summary}</p>}
         {article.body ? (
           article.body.split("\n\n").map((p, i) => <p key={i}>{p}</p>)

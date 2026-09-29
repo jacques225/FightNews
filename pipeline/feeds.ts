@@ -24,6 +24,16 @@ export async function eachSource<R>(fn: (s: Source) => Promise<R>): Promise<R[]>
 }
 
 type SourceEl = string | { _?: string; $?: { url?: string } };
+type MediaEl = { $?: { url?: string; medium?: string; type?: string; width?: string } };
+
+/** Champs d'une info que rss-parser ne lit pas de lui-même. */
+export type ItemExtras = {
+  sourceEl?: SourceEl;
+  mediaContent?: MediaEl[];
+  mediaThumbnail?: MediaEl[];
+  mediaGroup?: { "media:content"?: MediaEl[]; "media:thumbnail"?: MediaEl[] }[];
+  "content:encoded"?: string;
+};
 
 export const USER_AGENT = "Mozilla/5.0 (compatible; FightNewsBot/1.0; +https://github.com/jacques225/FightNews)";
 
@@ -34,7 +44,16 @@ const HEADERS = {
 
 // Un lecteur neuf à chaque flux : après une erreur, celui de rss-parser peut rester dans un état incohérent.
 const parse = (xml: string) =>
-  new Parser<Record<string, never>, { sourceEl?: SourceEl }>({ customFields: { item: [["source", "sourceEl"]] } }).parseString(xml);
+  new Parser<Record<string, never>, ItemExtras>({
+    customFields: {
+      item: [
+        ["source", "sourceEl"],
+        ["media:content", "mediaContent", { keepArray: true }],
+        ["media:thumbnail", "mediaThumbnail", { keepArray: true }],
+        ["media:group", "mediaGroup", { keepArray: true }],
+      ],
+    },
+  }).parseString(xml);
 
 /** Site momentanément indisponible (pas de réponse à temps, erreur de son serveur) : souvent passager. */
 export class UnavailableError extends Error {}
@@ -163,6 +182,58 @@ function decodeEntities(s: string) {
     const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : Number(e.slice(1));
     return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
   });
+}
+
+const IMAGE_EXT = /\.(jpe?g|png|webp|avif)(\?|#|$)/i;
+// Images qui ne sont pas la photo de l'article : pixels de mesure d'audience, avatars, émojis.
+const NOT_A_PHOTO = /feedburner\.com|stats\.wordpress\.com|doubleclick\.net|gravatar\.com|\/emoji\/|[/_-]pixel\b/i;
+
+/**
+ * Photo d'une info, telle que son média la fournit dans son flux : balise media (la plus grande taille
+ * raisonnable), pièce jointe, sinon première vraie image du contenu. Le site l'affiche depuis le serveur
+ * du média, avec son nom en crédit.
+ */
+export function imageOf(it: ItemExtras & { enclosure?: { url?: string; type?: string }; content?: string }): string | undefined {
+  const groups = it.mediaGroup ?? [];
+  const media = [...(it.mediaContent ?? []), ...groups.flatMap((g) => g["media:content"] ?? [])]
+    .map((m) => m.$ ?? {})
+    .filter((m) => m.url && (m.medium === "image" || m.type?.startsWith("image/") || (!m.medium && !m.type && IMAGE_EXT.test(m.url))));
+  // Plusieurs tailles proposées : la plus grande jusqu'à 1600 px, nette en une sans être trop lourde.
+  const sized = media.filter((m) => Number(m.width) > 0 && Number(m.width) <= 1600).sort((a, b) => Number(b.width) - Number(a.width));
+  const thumbs = [...(it.mediaThumbnail ?? []), ...groups.flatMap((g) => g["media:thumbnail"] ?? [])].map((m) => m.$?.url);
+  const { url: enclosure, type } = it.enclosure ?? {};
+  const candidates = [
+    sized[0]?.url,
+    ...media.map((m) => m.url),
+    ...thumbs,
+    enclosure && (type?.startsWith("image/") || IMAGE_EXT.test(enclosure)) ? enclosure : undefined,
+    firstImage(it["content:encoded"]),
+    firstImage(it.content),
+  ];
+  for (const c of candidates) {
+    const url = photoUrl(c);
+    if (url) return url;
+  }
+}
+
+/** Première image du contenu HTML qui ressemble à une photo (pas un pixel de mesure ni une icône). */
+function firstImage(html: string | undefined): string | undefined {
+  for (const [tag] of html?.matchAll(/<img\b[^>]*>/gi) ?? []) {
+    // Les sites qui chargent leurs images au défilement mettent la vraie adresse dans data-src.
+    const src = photoUrl(attr(tag, "data-lazy-src") ?? attr(tag, "data-src") ?? attr(tag, "src"));
+    const width = Number(attr(tag, "width"));
+    if (src && !(width > 0 && width < 200)) return src;
+  }
+}
+
+const attr = (tag: string, name: string) => new RegExp(`\\s${name}\\s*=\\s*["']([^"']+)["']`, "i").exec(tag)?.[1];
+
+/** Adresse https de la photo, ou rien si elle n'est pas exploitable. */
+function photoUrl(raw: string | undefined): string | undefined {
+  if (!raw) return;
+  // Le site est en https : une image en http serait bloquée par le navigateur.
+  const url = decodeEntities(raw.trim()).replace(/^\/\//, "https://").replace(/^http:\/\//i, "https://");
+  if (/^https:\/\/[^\s"'<>]+$/.test(url) && url.length <= 1000 && !NOT_A_PHOTO.test(url)) return url;
 }
 
 /** Date ISO fiable : jamais dans le futur, maintenant si la date du flux est illisible. */

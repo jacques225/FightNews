@@ -202,9 +202,11 @@ Estimation indicative : vérifie les tarifs du moment sur chaque service.
 - Sans IA, seuls **le titre et un extrait de moins de 300 caractères** sont repris, avec un bouton vers l'article complet.
 - Chaque article affiche **le média d'origine avec un lien**, et le badge « Source officielle »
   quand l'info vient d'une fédération ou d'une organisation.
-- **Aucune photo des sources n'est reprise** (droits d'auteur) : les cartes utilisent un dégradé aux couleurs de la rubrique.
-  Pour de vraies images : photos presse officielles des organisations et des marques (souvent fournies dans leurs kits presse),
-  Wikimedia Commons, ou tes propres visuels. Le champ `image_url` d'un article sert à en ajouter une.
+- **Photos** : le site affiche la photo que le média fournit dans son flux RSS, chargée depuis le serveur du média
+  (elle n'est jamais copiée), avec « Photo : nom du média » sous la photo de la brève. Ces photos appartiennent
+  aux médias et aux agences (Getty, AFP…), qui peuvent réclamer de l'argent pour un usage sans licence : c'est un
+  risque accepté. Sans photo dans le flux, ou si le média bloque son affichage, la carte garde son dégradé aux
+  couleurs de la rubrique. Le champ `image_url` d'un article permet de mettre une autre image.
 - Sur GitHub, **publication automatique des nouvelles infos** ; la variable Actions
   `PIPELINE_DEFAULT_STATUS=draft` permet de revenir à la relecture manuelle.
   En local, `.env.example` conserve le mode brouillon.
