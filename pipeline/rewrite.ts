@@ -60,7 +60,18 @@ export async function rewrite(
     }),
   });
   // Ne jamais journaliser la clé ou le corps d'une erreur du fournisseur.
-  if (!response.ok) throw new Error(`OpenAI HTTP ${response.status} : vérifier OPENAI_API_KEY, le crédit et l'accès au modèle. Aucun repli vers des extraits non traduits.`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => null) as { error?: { code?: string } } | null;
+    const reasons: Record<string, string> = {
+      insufficient_quota: "crédit ou quota API épuisé : vérifier la facturation du projet OpenAI",
+      rate_limit_exceeded: "limite temporaire de requêtes : réessayer au prochain passage",
+      model_not_found: "modèle indisponible pour ce projet : vérifier OPENAI_MODEL",
+      invalid_api_key: "clé API invalide : remplacer le secret OPENAI_API_KEY",
+    };
+    const code = error?.error?.code ?? "";
+    const reason = Object.hasOwn(reasons, code) ? reasons[code] : "vérifier OPENAI_API_KEY, le crédit et l'accès au modèle";
+    throw new Error(`OpenAI HTTP ${response.status} : ${reason}. Aucun repli vers des extraits non traduits.`);
+  }
   const result = await response.json() as {
     status: string;
     output?: { type: string; content?: { type: string; text?: string }[] }[];

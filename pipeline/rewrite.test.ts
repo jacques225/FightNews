@@ -84,3 +84,16 @@ test("rewrite defers incomplete responses and refusals", async () => {
     /Brève OpenAI invalide/,
   );
 });
+
+test("rewrite distinguishes exhausted credit from temporary rate limits without echoing provider messages", async () => {
+  for (const [code, expected] of [["insufficient_quota", /crédit ou quota API épuisé/], ["rate_limit_exceeded", /limite temporaire/]] as const) {
+    await assert.rejects(rewrite(item, [], {
+      apiKey: "test",
+      request: async () => response({ error: { code, message: "private provider details" } }, 429),
+    }), (error: unknown) => {
+      assert.match((error as Error).message, expected);
+      assert.doesNotMatch((error as Error).message, /private provider details/);
+      return true;
+    });
+  }
+});
