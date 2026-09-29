@@ -64,7 +64,12 @@ export async function rewrite(
     const error = await response.json().catch(() => null) as { error?: { code?: string } } | null;
     const reasons: Record<string, string> = {
       insufficient_quota: "crédit ou quota API épuisé : vérifier la facturation du projet OpenAI",
+      credit_balance_exhausted: "crédit API épuisé : ajouter du crédit dans la facturation OpenAI",
+      organization_spend_limit_exceeded: "plafond de dépenses de l'organisation atteint",
+      project_spend_limit_exceeded: "plafond de dépenses du projet atteint",
+      organization_usage_limit_exceeded: "limite d'utilisation de l'organisation atteinte",
       rate_limit_exceeded: "limite temporaire de requêtes : réessayer au prochain passage",
+      slow_down: "limite temporaire de requêtes : réessayer au prochain passage",
       model_not_found: "modèle indisponible pour ce projet : vérifier OPENAI_MODEL",
       invalid_api_key: "clé API invalide : remplacer le secret OPENAI_API_KEY",
     };
