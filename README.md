@@ -17,7 +17,7 @@ Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
                │  3. IA : résumé original + rubrique + tags, écarte les doublons
                │     (sans IA : titre + court extrait de la source)
                ▼
-           Supabase (table "articles", en brouillon par défaut)
+           Supabase (table "articles", publication automatique sur GitHub)
                │                                   │
                ▼                                   ▼
            Site Next.js sur Vercel           Récap du vendredi (GitHub Actions + Resend)
@@ -88,14 +88,21 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
    ```
 5. **Valider.** Dans Supabase, *Table editor > articles* : passe `status` à `published`
    pour les brèves que tu acceptes. Elles apparaissent sur le site.
-   Quand la qualité te convient, mets `PIPELINE_DEFAULT_STATUS=published` pour tout publier seul.
+   En local, mets `PIPELINE_DEFAULT_STATUS=published` dans `.env.local` pour publier automatiquement.
+   Sur GitHub, le robot publie les nouvelles infos par défaut ; voir la configuration ci-dessous.
 
 ## 3. Mettre en ligne et automatiser
 
 1. Dans le dépôt GitHub : *Settings > Secrets and variables > Actions*, onglet *Secrets*, ajoute
    `NEXT_PUBLIC_SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`, plus `ANTHROPIC_API_KEY` si tu utilises l'IA.
    Puis, dans l'onglet *Variables* du même écran, crée `PIPELINE_ENABLED` avec la valeur `true`.
-   Le robot tourne alors toutes les 30 minutes (onglet *Actions*, bouton *Run workflow* pour le lancer à la main).
+   Le robot tourne alors toutes les 30 minutes, à **xx:07 et xx:37 UTC**
+   (onglet *Actions*, bouton *Run workflow* pour le lancer à la main).
+   **Les nouvelles infos sont publiées automatiquement.** Pour repasser en validation manuelle,
+   crée la variable Actions `PIPELINE_DEFAULT_STATUS` = `draft` ; mets-la à `published` pour réactiver
+   la publication automatique. Modifier `.env.local` ne change pas le robot GitHub.
+   Les articles déjà en brouillon restent en brouillon : leur statut se change dans Supabase.
+   Les imports sont exécutés un par un pour éviter les doublons entre un lancement manuel et un lancement planifié.
    S'il manque un secret, le passage s'arrête en rouge et son journal donne le nom du secret à ajouter.
    Si Claude refuse la clé (clé invalide, plus de crédit), le passage continue sans IA et son journal le signale.
 2. Sur [vercel.com](https://vercel.com), importe le dépôt et ajoute les variables
@@ -198,7 +205,9 @@ Estimation indicative : vérifie les tarifs du moment sur chaque service.
 - **Aucune photo des sources n'est reprise** (droits d'auteur) : les cartes utilisent un dégradé aux couleurs de la rubrique.
   Pour de vraies images : photos presse officielles des organisations et des marques (souvent fournies dans leurs kits presse),
   Wikimedia Commons, ou tes propres visuels. Le champ `image_url` d'un article sert à en ajouter une.
-- Publication en **brouillon par défaut**, pour relire avant de publier.
+- Sur GitHub, **publication automatique des nouvelles infos** ; la variable Actions
+  `PIPELINE_DEFAULT_STATUS=draft` permet de revenir à la relecture manuelle.
+  En local, `.env.example` conserve le mode brouillon.
 - Respecte les conditions d'utilisation de chaque source que tu ajoutes.
 
 ## Pistes pour la suite
