@@ -14,7 +14,7 @@ export default function PrivacyPage() {
 
       <h2>Contenus</h2>
       <p>
-        FightNews publie des résumés rédigés à partir de l'actualité et indique toujours le média d'origine avec un lien.
+        FightNews affiche les titres et de courts extraits des flux RSS de médias francophones, avec un lien vers la source.
         Les marques et contenus cités appartiennent à leurs propriétaires.
       </p>
 

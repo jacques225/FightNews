@@ -30,7 +30,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <h1>{article.title}</h1>
         <p className="meta">Publié le {fullDate(article.published_at)}</p>
         {article.image_url && <SourcePhoto src={article.image_url} credit={article.source_name} eager />}
+        {!article.body && <p className="meta">Extrait de {article.source_name}</p>}
         {article.summary && <p className="lead">{article.summary}</p>}
+        {!article.body && !article.summary && <p>Ce média ne fournit pas d'extrait pour cette actualité.</p>}
         {article.body ? (
           article.body.split("\n\n").map((p, i) => <p key={i}>{p}</p>)
         ) : (

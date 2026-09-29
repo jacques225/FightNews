@@ -17,7 +17,7 @@ export const DEMO_ARTICLES: Article[] = [
   { id: "9", slug: "demo-lifestyle-gants", sport: "lifestyle", title: "Gants de boxe : une édition limitée signée par un champion", summary: "Une collaboration en série limitée, annoncée pour la fin du mois.", body: "", tags: ["gants", "collab"], image_url: null, source_name: "Exemple Source", source_url: "https://example.com", published_at: h(9), status: "published" },
   { id: "10", slug: "demo-lifestyle-sneakers", sport: "lifestyle", title: "Chaussures de boxe : le modèle culte revient en nouveau coloris", summary: "La réédition vise autant le ring que la rue.", body: "", tags: ["sneakers"], image_url: null, source_name: "Exemple Source", source_url: "https://example.com", published_at: h(30), status: "published" },
   { id: "7", slug: "demo-mma-pfl", sport: "mma", title: "PFL : les finalistes de la saison sont connus", summary: "Récapitulatif des demi-finales et des affiches de la finale.", body: "", tags: ["PFL"], image_url: null, source_name: "Exemple Source", source_url: "https://example.com", published_at: h(26), status: "published" },
-].map((a) => ({ ...a, body: `Ceci est un article de démonstration. Une fois le pipeline branché, ce texte sera un résumé original rédigé par l'IA à partir de la source citée plus bas.`, status: "published" as const }));
+].map((a) => ({ ...a, body: `Ceci est un article de démonstration. Une fois les flux branchés, FightNews affichera le titre et un court extrait du média cité plus bas.`, status: "published" as const }));
 
 // Articles plus anciens, pour voir les pages d'archives en démo.
 const ARCHIVE: Article[] = Array.from({ length: 60 }, (_, i) => {

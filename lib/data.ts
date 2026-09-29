@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Article } from "./types";
+import { FRENCH_PUBLISHERS } from "./rss-sources";
 import { DEMO_ARTICLES } from "./demo";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,6 +18,7 @@ export async function getLatest(limit = 30, sport?: string): Promise<Article[]> 
     .from("articles")
     .select("*")
     .eq("status", "published")
+    .in("source_name", FRENCH_PUBLISHERS)
     .order("published_at", { ascending: false })
     .limit(limit);
   if (sport) q = q.eq("sport", sport);
@@ -38,6 +40,7 @@ export async function getPage(page: number, sport?: string): Promise<ArticlePage
     .from("articles")
     .select("*", { count: "exact" })
     .eq("status", "published")
+    .in("source_name", FRENCH_PUBLISHERS)
     .order("published_at", { ascending: false })
     .range(from, from + PER_PAGE - 1);
   if (sport) q = q.eq("sport", sport);
@@ -65,6 +68,7 @@ export async function getEarlier(article: Article, limit = 4): Promise<Article[]
     .from("articles")
     .select("*")
     .eq("status", "published")
+    .in("source_name", FRENCH_PUBLISHERS)
     .eq("sport", article.sport)
     .lt("published_at", article.published_at)
     .order("published_at", { ascending: false })

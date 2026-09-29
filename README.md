@@ -1,27 +1,20 @@
 # FightNews
 
-Site d'actualité de tous les sports de combat, mis à jour automatiquement :
-les flux RSS sont lus toutes les 30 minutes, une IA rédige une brève originale en français
-pour chaque nouvelle info, la range dans la bonne rubrique (dont une rubrique **Lifestyle**
-pour les collections, l'équipement et la culture fight) et cite le média d'origine.
-L'IA est facultative : sans clé Claude, chaque info est reprise avec son titre, un court extrait
-et un lien vers l'article de son média.
-Les sources officielles (fédérations, organisations) sont signalées par un badge **Officiel**.
-Rien n'est effacé : toutes les anciennes actus restent consultables, rubrique par rubrique, page après page.
-Chaque vendredi, les abonnés reçoivent **le récap de la semaine** par e-mail.
+Actualité des sports de combat à partir de flux RSS francophones, mise à jour toutes les 30 minutes.
+Le robot importe le titre, un extrait de 280 caractères maximum environ, la photo fournie dans le flux
+et le lien vers le média. Aucun texte n'est généré ou traduit, aucune API d'IA n'est appelée.
+Il n'y a aucune clé OpenAI/Anthropic à configurer ni crédit IA à acheter.
+
+Les pages publiques et le récap ne listent que les médias francophones sélectionnés.
+Les anciens articles des autres sources restent en base et accessibles par leur URL directe.
+Les sources officielles portent le badge « Officiel ». La longueur de l'extrait dépend du flux :
+l'article complet reste chez son média. Le site conserve Supabase pour les données et Vercel pour l'hébergement.
+La newsletter est une fonction distincte, facultative, qui utilise toujours Resend.
 
 ```
-Flux RSS ──► robot (GitHub Actions, toutes les 30 min)
-               │  1. lit les flux        (pipeline/sources.json)
-               │  2. ignore les liens déjà vus
-               │  3. IA : résumé original + rubrique + tags, écarte les doublons
-               │     (sans IA : titre + court extrait de la source)
-               ▼
-           Supabase (table "articles", publication automatique sur GitHub)
-               │                                   │
-               ▼                                   ▼
-           Site Next.js sur Vercel           Récap du vendredi (GitHub Actions + Resend)
-           (se rafraîchit toutes les 5 min)  envoyé aux abonnés confirmés
+Flux RSS français → GitHub Actions (xx:07 et xx:37 UTC)
+                    → titres, courts extraits, photos et sources → Supabase
+                                                              → FightNews (cache 5 min)
 ```
 
 ## Contenu
@@ -44,7 +37,7 @@ lib/
   demo.ts                    Articles fictifs pour voir le design sans rien brancher
   email.ts                   Envoi des e-mails et modèles (confirmation, récap)
 pipeline/
-  run.ts                     Le robot : RSS → IA → base de données
+  run.ts                     Le robot : RSS français → courts extraits → base de données
   sources.json               Les flux suivis (voir « Les sources » plus bas)
   check-sources.ts           Vérifie que chaque flux répond
   newsletter.ts              Le récap hebdo
@@ -76,17 +69,14 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
 1. **Base de données.** Crée un projet gratuit sur [supabase.com](https://supabase.com),
    ouvre *SQL Editor*, colle le contenu de `supabase/schema.sql` et lance-le.
    Ce fichier peut être relancé sans risque après chaque mise à jour du projet.
-2. **IA (facultatif).** Crée une clé sur [console.anthropic.com](https://console.anthropic.com)
-   et ajoute quelques euros de crédit. Sans clé, le robot enregistre le titre, un court extrait et le lien
-   de chaque info, dans la langue de sa source. La rubrique Lifestyle reste alors vide : c'est l'IA qui y range les infos.
-3. **Clés.** Copie `.env.example` en `.env.local` et remplis-le
+2. **Clés.** Copie `.env.example` en `.env.local` et remplis-le
    (Supabase : *Project settings > API Keys*).
-4. **Premier test.**
+3. **Premier test.**
    ```bash
    npm run pipeline:dry   # affiche les infos trouvées, n'écrit rien
-   npm run pipeline       # rédige et enregistre les brouillons
+   npm run pipeline       # importe les titres et extraits en brouillon
    ```
-5. **Valider.** Dans Supabase, *Table editor > articles* : passe `status` à `published`
+4. **Valider.** Dans Supabase, *Table editor > articles* : passe `status` à `published`
    pour les brèves que tu acceptes. Elles apparaissent sur le site.
    En local, mets `PIPELINE_DEFAULT_STATUS=published` dans `.env.local` pour publier automatiquement.
    Sur GitHub, le robot publie les nouvelles infos par défaut ; voir la configuration ci-dessous.
@@ -94,7 +84,7 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
 ## 3. Mettre en ligne et automatiser
 
 1. Dans le dépôt GitHub : *Settings > Secrets and variables > Actions*, onglet *Secrets*, ajoute
-   `NEXT_PUBLIC_SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`, plus `ANTHROPIC_API_KEY` si tu utilises l'IA.
+   `NEXT_PUBLIC_SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY`. Aucun secret IA n’est utilisé.
    Puis, dans l'onglet *Variables* du même écran, crée `PIPELINE_ENABLED` avec la valeur `true`.
    Le robot tourne alors toutes les 30 minutes, à **xx:07 et xx:37 UTC**
    (onglet *Actions*, bouton *Run workflow* pour le lancer à la main).
@@ -104,7 +94,7 @@ npm run newsletter:preview   # écrit newsletter-apercu.html, à ouvrir dans ton
    Les articles déjà en brouillon restent en brouillon : leur statut se change dans Supabase.
    Les imports sont exécutés un par un pour éviter les doublons entre un lancement manuel et un lancement planifié.
    S'il manque un secret, le passage s'arrête en rouge et son journal donne le nom du secret à ajouter.
-   Si Claude refuse la clé (clé invalide, plus de crédit), le passage continue sans IA et son journal le signale.
+   Une panne d’un flux est signalée dans les journaux ; les autres flux continuent d’être traités.
 2. Sur [vercel.com](https://vercel.com), importe le dépôt et ajoute les variables
    `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Le site est en ligne.
 
@@ -137,80 +127,47 @@ Comment ça marche :
 
 ## Les sources
 
-Le robot lit les flux de `pipeline/sources.json`, tous vérifiés depuis GitHub le 28 septembre 2026.
-En **gras**, les sources officielles (fédérations, organisations) : leurs articles portent le badge « Officiel ».
+La sélection est dans `pipeline/sources.json`. Chaque source porte `"language": "fr"`.
 
 | Rubrique | Sources |
 |---|---|
-| MMA | **UFC**, **ONE Championship**, **IMMAF** (fédération internationale amateur), **Hexagone MMA**, **FMMAF**, La Sueur, RMC Sport, L'Équipe, MMA Fighting, Sherdog, Cageside Press |
-| Boxe anglaise | **FFBoxe**, **World Boxing**, **WBC**, **WBA**, **IBF**, **WBO**, L'Équipe, Boxing News 24, Boxing News, Bad Left Hook |
-| Kickboxing | **FFKMDA** |
-| Muay thaï | **IFMA** |
+| MMA | ActuMMA (actualités), FMMAF, Hexagone MMA, La Sueur, RMC Sport, L'Équipe |
+| Boxe | FFBoxe, L'Équipe |
+| Kickboxing et muay thaï | FFKMDA, actualités correspondantes des médias multisports |
 | Judo | L'Esprit du Judo, L'Équipe, franceinfo |
-| Grappling & JJB | **ADCC**, BJJEE, BJJ Heroes, Boost Your BJJ |
-| Lutte | **FFLDA** |
+| Grappling et JJB | Boost Your BJJ |
+| Lutte | FFLDA |
 
-Les médias généralistes parlent aussi des autres sports : l'IA range chaque info dans la bonne rubrique,
-quelle que soit la source. Sans IA, l'info reste dans la rubrique de son flux, sauf si son titre commence
-par le nom d'un sport (« Boxe : … »).
+La rubrique est celle du flux ; un nom de discipline explicite dans le titre peut la préciser.
+La Sueur est filtrée par mots-clés de sports de combat pour éviter les sujets de basket ou de football.
+Ce classement déterministe peut manquer un sujet ambigu : il ne remplace pas un éditeur.
+La rubrique Lifestyle n'a pas de source dédiée ; elle reste disponible pour des contenus ajoutés manuellement.
+Une source sélectionnée peut être inactive ou momentanément en panne : le contrôle des sources le signale.
 
-Ce qui manque, et pourquoi :
-- **FMMAF** : son site n'a rien publié depuis août 2025. Le MMA dépend de la FFBoxe depuis 2020 (délégation
-  du ministère des Sports), dont le flux est suivi. Le flux FMMAF reste dans la liste et reprendra dès que le site republiera.
-- **JJB** : aucune fédération ne publie de flux RSS (IBJJF, AJP, UAEJJF, JJIF, CFJJB, ni France Judo,
-  qui a la délégation du JJB en France depuis 2021). Le JJB arrive par l'ADCC, BJJEE, BJJ Heroes
-  et Boost Your BJJ (en français).
-- **Judo et lutte internationaux** : l'IJF et United World Wrestling n'ont pas de flux RSS.
-- **Google Actualités** : retiré, car Google interdit aux robots de lire ses flux de recherche (fichier robots.txt).
-  Eurosport l'interdit aussi.
-- **Lifestyle** : les marques testées (Venum, Hayabusa) n'ont pas de flux utilisable.
-  Les sorties de collections relayées par les médias suivis sont rangées en Lifestyle par l'IA.
-
-**Ajouter une source** : une ligne de plus dans `pipeline/sources.json`, par exemple
+Pour ajouter un média francophone :
 
 ```json
-{ "name": "Nom affiché sur le site", "url": "https://exemple.com/feed/", "sport": "mma", "official": true }
+{ "name": "Média français", "url": "https://exemple.com/feed/", "sport": "mma", "language": "fr" }
 ```
 
-`sport` est la rubrique proposée à l'IA, et celle retenue sans IA (`mma`, `boxe`, `kickboxing`, `muay-thai`, `judo`, `grappling`, `lutte`, `lifestyle`).
-Mets `"official": true` seulement pour une fédération ou une organisation.
+Le nom est aussi utilisé pour sélectionner les articles sur le site : conserver le même nom lors d'un changement d'URL.
+N'ajouter `"official": true` que pour une fédération ou une organisation.
+Les flux anglophones ne sont plus importés : aucune traduction automatique n'est faite.
 
-**Vérifier les sources** : onglet *Actions* du dépôt, tâche *Vérifier les sources*, bouton *Run workflow*.
-Elle tourne aussi chaque lundi et à chaque modification de la liste. Le tableau affiché sur sa page donne,
-pour chaque flux, s'il répond, combien d'articles il a publiés ces dernières 24 h et la date du dernier,
-et signale un site qui interdit aux robots de lire son flux. Il estime aussi le nombre d'infos par jour
-et le coût de l'IA. Un flux en erreur est réessayé une fois. S'il reste en panne, la tâche passe en rouge :
-c'est le moment de le retirer ou de le remplacer. Un site momentanément indisponible (trop lent, ou son serveur
-en erreur) est signalé « à surveiller » sans faire passer la tâche en rouge : le robot le relira au passage suivant.
+**Vérification** : `npm run sources:check`, ou tâche GitHub « Vérifier les sources ».
+Elle contrôle le flux, robots.txt, les dates et les photos, puis indique les sources inactives ou en erreur.
+Elle s'exécute également chaque lundi et lorsque la configuration des sources change.
+Une erreur temporaire d'un média n'empêche pas le robot d'importer les autres sources.
 
-## Coût estimé
+## Coût et contenu
 
-| Poste | Prix |
-|---|---|
-| Vercel, Supabase, GitHub Actions | 0 € au départ (offres gratuites) |
-| IA, facultative (Claude Haiku 4.5, 25 infos max par passage) | 0 € sans IA ; avec, environ 10 $ par mois avec les sources actuelles (recalculé par *Vérifier les sources*) |
-| Resend (e-mails) | gratuit pour démarrer (quelques milliers d'e-mails par mois), payant au-delà |
-| Nom de domaine | ~10 € par an |
-
-Estimation indicative : vérifie les tarifs du moment sur chaque service.
-
-## Règles de contenu déjà intégrées
-
-- L'IA a pour consigne de **reformuler**, de ne rien inventer, et de faire court si la source est maigre.
-- En **Lifestyle**, elle reste informative, sans ton publicitaire, et ne donne un prix ou une date de sortie
-  que s'ils figurent dans la source.
-- Sans IA, seuls **le titre et un extrait de moins de 300 caractères** sont repris, avec un bouton vers l'article complet.
-- Chaque article affiche **le média d'origine avec un lien**, et le badge « Source officielle »
-  quand l'info vient d'une fédération ou d'une organisation.
-- **Photos** : le site affiche la photo que le média fournit dans son flux RSS, chargée depuis le serveur du média
-  (elle n'est jamais copiée), avec « Photo : nom du média » sous la photo de la brève. Ces photos appartiennent
-  aux médias et aux agences (Getty, AFP…), qui peuvent réclamer de l'argent pour un usage sans licence : c'est un
-  risque accepté. Sans photo dans le flux, ou si le média bloque son affichage, la carte garde son dégradé aux
-  couleurs de la rubrique. Le champ `image_url` d'un article permet de mettre une autre image.
-- Sur GitHub, **publication automatique des nouvelles infos** ; la variable Actions
-  `PIPELINE_DEFAULT_STATUS=draft` permet de revenir à la relecture manuelle.
-  En local, `.env.example` conserve le mode brouillon.
-- Respecte les conditions d'utilisation de chaque source que tu ajoutes.
+- Traitement RSS : aucun coût d'IA. Au plus 25 nouvelles entrées par passage.
+- Hébergement, base, GitHub Actions et newsletter : quotas et éventuels frais des services existants.
+- Titre et court extrait repris du flux, affichés comme un extrait avec attribution ; aucune copie intégrale.
+- Photo fournie par le média, affichée depuis son serveur, avec crédit et visuel de remplacement si elle échoue.
+- Déduplication par URL et titre normalisé ; les liens écartés ne sont pas retraités à chaque passage.
+- Publication automatique sur GitHub ; `PIPELINE_DEFAULT_STATUS=draft` permet la validation manuelle.
+- Respecter les conditions d'utilisation des sources ajoutées.
 
 ## Pistes pour la suite
 
