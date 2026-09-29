@@ -1,7 +1,7 @@
 /**
  * Vérifie chaque flux de pipeline/sources.json : le site autorise-t-il les robots à le lire (robots.txt),
  * répond-il, combien d'articles, de quand date le plus récent, combien sont parus ces dernières 24 h.
- * Estime aussi le nombre d'infos que le robot traitera par jour et ce que ça coûte en IA.
+ * Estime aussi le nombre d'infos que le robot traitera par jour, sans coût IA.
  * Tourne sur GitHub (même réseau que le robot) à chaque modification des sources et chaque lundi.
  *
  * Usage : npm run sources:check
@@ -13,10 +13,6 @@ const STALE_DAYS = 30;
 const DAY = 86400_000;
 // Le robot passe toutes les 30 minutes (.github/workflows/pipeline.yml).
 const MAX_PER_DAY = MAX_NEW_PER_RUN * 48;
-// Une brève avec Claude Haiku 4.5 (1 $ le million de tokens lus, 5 $ le million écrits) :
-// environ 1 600 tokens lus (consignes, extrait, titres déjà publiés) et 350 écrits, soit 0,0034 $.
-// À revoir si tu changes AI_MODEL.
-const COST_PER_ITEM_USD = (1600 * 1 + 350 * 5) / 1_000_000;
 
 type Result = {
   name: string; sport: string; official: boolean; url: string;
@@ -33,7 +29,6 @@ function age(iso: string) {
 const isStale = (r: Result) => Date.now() - new Date(r.latest!).getTime() > STALE_DAYS * DAY;
 // Un flux dont tous les articles datent de moins de 24 h en publie sans doute plus qu'il n'en affiche.
 const isFull = (r: Result) => r.items > 0 && r.lastDay.length === r.items;
-const usd = (n: number) => `${n.toFixed(n < 10 ? 2 : 0).replace(".", ",")} $`;
 
 /**
  * Le robots.txt du site interdit-il à FightNewsBot de lire ce flux ? Renvoie la règle qui l'interdit, sinon null.
@@ -134,13 +129,12 @@ async function main() {
 
   // Le robot ignore un lien déjà vu, même s'il apparaît dans plusieurs flux.
   const perDay = new Set(results.flatMap((r) => r.lastDay)).size;
-  const treated = Math.min(perDay, MAX_PER_DAY);
   const full = results.filter(isFull).length;
   const volume =
     `≈ ${perDay} nouvelles infos par jour` +
     (full ? ` (au moins : ${full} flux n'affichent que leurs derniers articles)` : "") +
     (perDay > MAX_PER_DAY ? `. Le robot en traite au plus ${MAX_PER_DAY} (${MAX_NEW_PER_RUN} par passage), les plus récentes d'abord` : "");
-  const cost = `Coût IA estimé (Claude Haiku 4.5) : ${usd(treated * COST_PER_ITEM_USD)} par jour, soit ${usd(treated * COST_PER_ITEM_USD * 30)} par mois`;
+  const cost = "Coût IA : 0 — import RSS français sans génération ni traduction";
 
   console.log(`\n${results.length} sources : ${results.length - broken - stale - unavailable} OK, ${stale} inactives, ${unavailable} indisponibles, ${broken} en panne.`);
   console.log(`${volume}.\n${cost}.`);

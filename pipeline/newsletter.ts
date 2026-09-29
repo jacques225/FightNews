@@ -11,6 +11,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
+import { FRENCH_PUBLISHERS } from "../lib/rss-sources";
 import { DEMO_ARTICLES } from "../lib/demo";
 import { digestEmail, emailConfigured, sendBatch, siteUrl, type Outgoing } from "../lib/email";
 import type { Article } from "../lib/types";
@@ -33,6 +34,7 @@ async function weekArticles(): Promise<Article[]> {
     .from("articles")
     .select("*")
     .eq("status", "published")
+    .in("source_name", FRENCH_PUBLISHERS)
     .gte("published_at", since)
     .order("published_at", { ascending: false })
     .limit(300);

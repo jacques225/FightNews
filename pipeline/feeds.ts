@@ -8,13 +8,15 @@ import sources from "./sources.json";
 export type Source = {
   name: string;
   url: string;
-  sport: string;       // rubrique suggérée à l'IA
+  sport: string;       // rubrique du flux
+  language: "fr";     // seules les sources francophones sont actives
+  mixed?: boolean;     // média multisport : filtrage des sujets sans rapport
   official?: boolean;  // site officiel (fédération, organisation) : badge "Officiel" sur le site
 };
 
-export const SOURCES = sources as Source[];
+export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr");
 
-export const MAX_NEW_PER_RUN = 25; // plafond par passage du robot, pour maîtriser le coût IA
+export const MAX_NEW_PER_RUN = 25; // plafond par passage du robot, pour limiter le volume de chaque import
 
 /** Lit les flux 6 par 6 : un site lent ne bloque pas les autres. */
 export async function eachSource<R>(fn: (s: Source) => Promise<R>): Promise<R[]> {

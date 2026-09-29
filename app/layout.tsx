@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="container footer-inner">
             <div>
               <p className="logo">FIGHT<span>NEWS</span></p>
-              <p>FightNews résume l'actualité et renvoie toujours vers la source d'origine.</p>
+              <p>Les titres et extraits de l'actualité des sports de combat, avec leurs sources.</p>
               <p>
                 <Link href="/actus">Toute l'actu</Link> · <Link href="/newsletter">Newsletter</Link> ·{" "}
                 <Link href="/confidentialite">Mentions légales et confidentialité</Link>

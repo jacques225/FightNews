@@ -1,7 +1,7 @@
 import { SPORTS } from "../lib/sports";
 import { escapeRe } from "./feeds";
 
-// Brèves sans IA (pas de clé Claude, ou clé refusée) : le robot reprend le titre de la source
+// Mode RSS français : le robot reprend le titre de la source
 // et un court extrait, avec le lien vers l'article complet. Rien n'est réécrit ni traduit.
 
 export const MAX_EXCERPT = 280; // un extrait, pas l'article : l'article complet reste chez son média
@@ -48,7 +48,10 @@ export function sportOf(title: string, feedSport: string): string {
   const prefix = /^([^:]{2,25}?)\s?:\s/.exec(title)?.[1].trim();
   // Le mot doit être entier : « Boxe » oui, « Boxers » non (\b ne gère pas les lettres accentuées comme « thaï »).
   const match = prefix && PREFIXES.find(([, words]) => new RegExp(`^(${words})(?![\\p{L}\\p{N}])`, "iu").test(prefix))?.[0];
-  return match && SPORTS.some((s) => s.slug === match) ? match : feedSport;
+  if (match && SPORTS.some((s) => s.slug === match)) return match;
+  // Les flux FFKMDA/RMC couvrent plusieurs disciplines : les noms explicites du titre priment.
+  const named = PREFIXES.find(([, words]) => new RegExp(`(?:^|[^\\p{L}\\p{N}])(${words})(?![\\p{L}\\p{N}])`, "iu").test(title))?.[0];
+  return named ?? feedSport;
 }
 
 const norm = (s: string) =>
@@ -58,4 +61,9 @@ const norm = (s: string) =>
 export function isRepeat(bySport: Map<string, string[]>, title: string): boolean {
   const t = norm(title);
   return [...bySport.values()].some((titles) => titles.some((x) => norm(x) === t));
+}
+
+/** Les flux multisports ne doivent pas importer les sujets football, basket, etc. */
+export function isCombatNews(title: string, snippet: string): boolean {
+  return /\b(mma|ufc|pfl|bellator|ares|boxe|boxing|kickboxing|muay|judo|grappling|jjb|bjj|adcc|lutte|jiu[ -]?jitsu|octogone)\b/i.test(`${title} ${snippet}`);
 }
