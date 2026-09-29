@@ -1,7 +1,10 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
+import EventDate from "@/components/EventDate";
+import Fighters from "@/components/Fighters";
 import NewsletterForm from "@/components/NewsletterForm";
+import { getUpcomingEvents, mainBout, shortName, type FightEvent } from "@/lib/calendar";
 import { getLatest, timeAgo } from "@/lib/data";
 import { SPORTS, LIFESTYLE, getSport } from "@/lib/sports";
 import type { Article } from "@/lib/types";
@@ -9,7 +12,7 @@ import type { Article } from "@/lib/types";
 export const revalidate = 300; // la page se régénère toutes les 5 min
 
 export default async function Home() {
-  const [articles, lifestyle] = await Promise.all([getLatest(30), getLatest(4, LIFESTYLE)]);
+  const [articles, lifestyle, events] = await Promise.all([getLatest(30), getLatest(4, LIFESTYLE), getUpcomingEvents()]);
   const [hero, ...rest] = articles;
   const sports = SPORTS.filter((s) => s.slug !== LIFESTYLE);
 
@@ -45,6 +48,8 @@ export default async function Home() {
           </Link>
         ))}
       </nav>
+
+      <UpcomingBlock events={events.slice(0, 4)} />
 
       {sports.map((sport, i) => (
         <Fragment key={sport.slug}>
@@ -119,6 +124,36 @@ function NewsletterBand() {
         <p>Résultats, annonces et nouveautés lifestyle : l'essentiel en cinq minutes, dans ta boîte mail.</p>
       </div>
       <NewsletterForm />
+    </section>
+  );
+}
+
+/** Les prochains galas, vers le calendrier complet. */
+function UpcomingBlock({ events }: { events: FightEvent[] }) {
+  if (!events.length) return null;
+  return (
+    <section className="section">
+      <div className="section-head">
+        <h2>Prochains combats</h2>
+        <Link href="/calendrier">Tout le calendrier <Arrow /></Link>
+      </div>
+      <ol className="cal-strip">
+        {events.map((e) => {
+          const main = mainBout(e);
+          return (
+            <li key={e.id} style={{ ["--c" as string]: getSport(e.sport)?.color }}>
+              <Link href={`/calendrier#${e.id}`}>
+                <EventDate date={e.date} />
+                <div className="cal-body">
+                  <span className="cal-org">{e.org}</span>
+                  <span className="cal-name">{main ? shortName(e.name) : e.name}</span>
+                  {main ? <Fighters bout={main} className="cal-headline" /> : <span className="meta">{e.location}</span>}
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }

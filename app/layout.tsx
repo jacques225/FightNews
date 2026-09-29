@@ -26,7 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="logo">FIGHT<span>NEWS</span></p>
               <p>Les titres et extraits de l'actualité des sports de combat, avec leurs sources.</p>
               <p>
-                <Link href="/actus">Toute l'actu</Link> · <Link href="/newsletter">Newsletter</Link> ·{" "}
+                <Link href="/actus">Toute l'actu</Link> · <Link href="/calendrier">Calendrier</Link> ·{" "}
+                <Link href="/newsletter">Newsletter</Link> ·{" "}
                 <Link href="/confidentialite">Mentions légales et confidentialité</Link>
               </p>
             </div>
