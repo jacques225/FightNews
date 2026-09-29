@@ -5,7 +5,7 @@
    ───────────────────────────────────────────────────────────── */
 :root {
   color-scheme: dark;
-  --bg: #09090b;
+  --bg: #0c0c0e;
   --panel: #141418;
   --panel-2: #1b1b21;
   --line: rgba(255, 255, 255, 0.08);
@@ -15,8 +15,9 @@
   --accent: #ef233c;
   --accent-strong: #d90429;
   --c: var(--accent);
-  --radius: 14px;
-  --radius-sm: 8px;
+  --radius: 2px;
+  --radius-sm: 2px;
+  --rule: rgba(255, 255, 255, 0.14);
   --font-display: "Barlow Condensed", "Oswald", Impact, sans-serif;
   --font-body: "Barlow", Inter, system-ui, sans-serif;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -26,10 +27,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background:
-    radial-gradient(1200px 500px at 85% -10%, rgba(239, 35, 60, 0.12), transparent 60%),
-    var(--bg);
-  background-repeat: no-repeat;
+  background: var(--bg);
+  overflow-x: clip;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 16px;
@@ -465,6 +464,188 @@ main.container { padding-top: 24px; min-height: 70vh; }
   .cal-bout { grid-template-columns: minmax(0, 1fr); }
   .cal-strip { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 82%; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
   .cal-strip li { scroll-snap-align: start; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Direction « presse de combat » (références Inspo : The Verge,
+   Highsnobiety, Huck, Climate Equity Fund).
+   Angles droits, filets fins au lieu de cartes encadrées, aplats de
+   couleur franche, titres condensés très grands, pas de halo ni de
+   soulèvement au survol. Ce bloc prime sur les règles plus haut.
+   ───────────────────────────────────────────────────────────── */
+
+/* En-tête : logo massif, rubriques séparées par des « / », rubrique active en pavé */
+.header { background: var(--bg); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--rule); }
+.header::after { display: none; }
+.header-inner { height: 72px; }
+.logo { font-size: 34px; font-style: normal; letter-spacing: -0.01em; text-transform: uppercase; }
+.logo .logo-mark { border-radius: 0; transform: none; }
+.nav { gap: 0; align-items: center; }
+.nav a { padding: 6px 10px; color: #d4d4d8; font-weight: 700; }
+.nav a + a::before { content: "/"; position: absolute; left: -3px; color: #52525b; font-weight: 400; }
+.nav a::after { display: none; }
+.nav a:hover { color: #fff; }
+.nav a[aria-current="page"] { background: var(--c, var(--accent)); color: #fff; }
+.nav .nav-all[aria-current="page"] { background: #fff; color: #0c0c0e; }
+.nav-lifestyle { margin-left: 0; }
+.nav-lifestyle::before { content: "/" !important; position: absolute; left: -3px; top: auto; height: auto; border: 0; }
+.nav-cta { border-radius: 0; box-shadow: none; text-transform: uppercase; font-family: var(--font-display); font-size: 17px; letter-spacing: 0.04em; }
+.nav-cta:hover { transform: none; }
+
+/* Dernière minute : bandeau rouge en aplat sur toute la largeur */
+.ticker {
+  margin: -24px calc(50% - 50vw) 28px; border: 0; border-radius: 0;
+  background: var(--accent);
+}
+.ticker-label { background: #0c0c0e; color: #fff; padding: 0 18px; }
+.ticker-track { mask-image: none; }
+.ticker a { color: #fff; font-weight: 600; }
+.ticker a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.ticker a b { color: #0c0c0e; }
+
+/* Cartes : plus de cadre ni de fond, photo à angles droits, titre dessous */
+.card { background: none; border: 0; border-radius: 0; overflow: visible; gap: 0; }
+.card:hover { transform: none; box-shadow: none; }
+.card-img { border-radius: var(--radius); }
+.card:hover .card-img img { transform: none; }
+.card:hover .card-watermark { transform: none; }
+.badge { border-radius: 0; box-shadow: none; top: 0; left: 0; padding: 5px 10px; }
+.official-card { top: 0; right: 0; border-radius: 0; }
+.card-body { padding: 14px 0 0; gap: 8px; }
+.card h3 { font-size: 23px; font-weight: 700; line-height: 1.08; }
+.card:hover h3 { text-decoration: underline; text-decoration-color: var(--c); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.meta { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* À la une : grande photo, titre énorme qui déborde sur le bas de l'image */
+.card-large { min-height: 0; padding-top: 0; }
+.card-large .card-img { position: relative; inset: auto; aspect-ratio: 16/10; }
+.card-large .card-img::after { background: linear-gradient(180deg, rgba(12,12,14,0) 55%, rgba(12,12,14,0.85) 100%); }
+.card-large .badge { top: 0; left: 0; font-size: 16px; padding: 6px 12px; }
+.card-large .card-body { margin-top: -0.95em; padding: 0; font-size: clamp(40px, 5vw, 76px); gap: 14px; }
+.card-large h3 {
+  font-size: 1em; font-weight: 800; line-height: 0.9; letter-spacing: -0.01em; max-width: 20ch;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
+}
+.card-large p { font-size: 18px; color: #d4d4d8; }
+.card-large .meta { color: var(--muted); }
+.card-large:hover h3 { text-decoration-thickness: 5px; }
+
+/* Colonne « Les plus récentes » : liste à filets, séparée par un filet vertical */
+.hero-grid { gap: 36px; margin-bottom: 48px; }
+.latest { padding: 0 0 0 28px; border: 0; border-left: 1px solid var(--rule); border-radius: 0; background: none; }
+.latest-title { font-size: 26px; padding-bottom: 12px; border-bottom: 4px solid #fff; }
+.live-dot { border-radius: 0; }
+.latest-list li { border-top: 1px solid var(--rule); }
+.latest-rank { font-style: normal; color: var(--c); -webkit-text-stroke: 0; font-size: 28px; }
+.latest-headline { font-size: 17px; font-weight: 700; }
+.latest-more { border-top: 1px solid var(--rule); text-transform: uppercase; font-family: var(--font-display); font-size: 17px; letter-spacing: 0.04em; }
+
+/* Accès aux rubriques : un index typographique, trait de couleur au-dessus */
+.sport-rail { gap: 0; margin-bottom: 64px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.sport-rail a { border: 0; border-radius: 0; background: none; padding: 16px 14px 18px; border-left: 1px solid var(--rule); }
+.sport-rail a:first-child { border-left: 0; }
+.sport-rail a::before { left: 0; right: 0; top: -1px; bottom: auto; width: auto; height: 4px; transform: scaleX(0.25); transform-origin: left; transition: transform .25s var(--ease); }
+.sport-rail a:hover { transform: none; background: color-mix(in srgb, var(--c) 10%, transparent); }
+.sport-rail a:hover::before { transform: scaleX(1); }
+.sport-rail-name { font-size: 22px; }
+
+/* Rubriques : nom en très grand, épais filet de la couleur du sport au-dessus */
+.section { margin-bottom: 88px; }
+.section-head { align-items: baseline; padding: 14px 0 0; margin-bottom: 24px; border-bottom: 0; border-top: 6px solid var(--c); }
+.section-head::after { display: none; }
+.section-head h2, .lifestyle-head h2, .sport-banner h1 { min-width: 0; overflow-wrap: break-word; }
+.section-head h2 { font-size: clamp(52px, 8vw, 112px); font-style: normal; line-height: 0.85; letter-spacing: -0.015em; }
+.section-head a { color: #fff; text-transform: uppercase; font-family: var(--font-display); font-size: 17px; letter-spacing: 0.04em; }
+.section-head a:hover { color: var(--c); }
+.section-compact .section-head h2, .related .section-head h2 { font-size: clamp(34px, 4vw, 52px); }
+
+/* Grille d'une rubrique : un article principal, les suivants en liste à vignettes */
+.grid-lead { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-rows: repeat(3, auto) 1fr; gap: 0 36px; }
+.grid-lead > .card:first-child { grid-row: span 4; }
+.grid-lead .meta { margin-top: 2px; }
+.grid-lead > .card:first-child h3 { font-size: clamp(28px, 2.8vw, 38px); line-height: 1; text-transform: uppercase; }
+.grid-lead > .card:not(:first-child) { flex-direction: row; gap: 16px; padding: 16px 0; border-top: 1px solid var(--rule); }
+.grid-lead > .card:nth-child(2) { border-top: 0; padding-top: 0; }
+.grid-lead > .card:not(:first-child) .card-img { flex: 0 0 38%; align-self: flex-start; }
+.grid-lead > .card:not(:first-child) .card-body { padding: 0; }
+.grid-lead > .card:not(:first-child) .card-watermark { font-size: 56px; }
+.grid-lead > .card:not(:first-child) .badge, .grid-lead > .card:not(:first-child) .official-card { font-size: 11px; padding: 3px 6px; }
+.grid-lead > .card:not(:first-child) h3 { font-size: 20px; }
+
+/* Lifestyle : aplat sombre, filet magenta, sans halo */
+.lifestyle-block { padding: 28px 0 0; border: 0; border-top: 6px solid var(--c); border-radius: 0; background: none; }
+.lifestyle-head h2 { font-size: clamp(52px, 8vw, 112px); font-style: normal; line-height: 0.85; }
+.lifestyle-head a { text-transform: uppercase; font-family: var(--font-display); font-size: 17px; letter-spacing: 0.04em; }
+.lifestyle-block .card { background: none; }
+
+/* Newsletter : grand aplat rouge, texte noir */
+.nl-band {
+  margin: 0 calc(50% - 50vw) 88px; padding: 56px max(20px, calc(50vw - 600px)); border: 0; border-radius: 0;
+  background: var(--accent); color: #0c0c0e;
+}
+.nl-band h2 { font-size: clamp(40px, 5.4vw, 76px); font-style: normal; line-height: 0.88; }
+.nl-band p, .nl-band .nl-legal, .nl-band .nl-legal a { color: #1f0006; }
+.nl-band .kicker-light { color: #0c0c0e; }
+.nl-band .nl-row input { background: #fff; color: #0c0c0e; border: 0; }
+.nl-band .nl-row input::placeholder { color: #6b6b75; }
+.nl-band .nl-row input:focus { outline-color: #0c0c0e; }
+.nl-band .nl-row button { background: #0c0c0e; color: #fff; }
+.nl-band .nl-row button:hover { background: #27272a; }
+.nl-band .nl-error { color: #0c0c0e; font-weight: 600; }
+
+/* Boutons, champs, pastilles : angles droits */
+.nl-row input, .nl-row button, .btn, .chip, .pagination a, .cal-card summary, .tags span, .notice, .nl-done { border-radius: var(--radius); }
+.btn, .nl-row button { text-transform: uppercase; font-family: var(--font-display); font-size: 18px; letter-spacing: 0.04em; }
+.nl-row button:active, .btn:active { transform: none; }
+
+/* Bannières de rubrique et du calendrier : aplat de la couleur, titre énorme */
+.sport-banner { padding: 40px 0 28px; border: 0; border-top: 6px solid var(--c); border-radius: 0; background: none; }
+.sport-banner h1 { font-size: clamp(64px, 11vw, 150px); font-style: normal; line-height: 0.82; letter-spacing: -0.02em; color: var(--c); }
+.sport-banner .kicker { color: var(--muted); opacity: 1; }
+.sport-banner p { color: #d4d4d8; font-size: 18px; }
+
+/* Page article */
+.article h1 { font-size: clamp(40px, 6vw, 72px); line-height: 0.92; }
+.article .badge { padding: 5px 12px; }
+.article-photo img { border-radius: var(--radius); }
+.source { border: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); border-left: 6px solid var(--accent); border-radius: 0; background: none; }
+
+/* Calendrier : filets et dates en pavé */
+.cal-month-title { font-size: clamp(36px, 4.5vw, 56px); font-style: normal; border-top: 1px solid var(--rule); padding-top: 14px; }
+.cal-list { gap: 0; }
+.cal-event { border: 0; border-top: 1px solid var(--rule); border-radius: 0; background: none; padding: 20px 0; }
+.cal-event:target { box-shadow: none; background: color-mix(in srgb, var(--c) 10%, transparent); }
+.cal-date { border: 0; border-radius: 0; background: var(--c); color: #fff; }
+.cal-date span { color: #fff; }
+.cal-strip { gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.cal-strip li + li a { border-left: 1px solid var(--rule); }
+.cal-strip a { border: 0; border-radius: 0; background: none; padding: 18px 16px; }
+.cal-strip a:hover { transform: none; background: color-mix(in srgb, var(--c) 10%, transparent); }
+.cal-credit { border-radius: 0; }
+.cal-title, .cal-today, .official { border-radius: 0; }
+
+/* Pied de page */
+.footer { background: none; border-top: 6px solid var(--accent); }
+.footer .logo { font-size: 44px; font-style: normal; }
+
+@media (max-width: 960px) {
+  .latest { padding: 0; border-left: 0; }
+  .card-large .card-body { margin-top: -0.7em; }
+}
+@media (max-width: 800px) {
+  .logo { font-size: 26px; }
+  .header-inner { height: auto; }
+  .ticker { margin-top: -24px; }
+  .sport-rail a:nth-child(odd) { border-left: 0; }
+  .sport-rail a { border-top: 1px solid var(--rule); }
+  .grid-lead { grid-template-columns: minmax(0, 1fr); }
+  .grid-lead > .card:first-child { grid-row: auto; margin-bottom: 16px; }
+  .grid-lead > .card:nth-child(2) { border-top: 1px solid var(--rule); padding-top: 16px; }
+  .grid-lead > .card:not(:first-child) h3 { font-size: 18px; }
+  .nl-band { padding: 40px 16px; }
+  .cal-strip { border: 0; }
+  .cal-strip a { border: 1px solid var(--rule); }
+  .cal-strip li + li a { border-left: 1px solid var(--rule); }
 }
 
 /* Moins d'animations pour qui le demande */
