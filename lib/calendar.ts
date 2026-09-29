@@ -184,7 +184,7 @@ const CLASSES: [RegExp, string][] = [
   [/super welterweight|light middleweight/i, "Poids super-mi-moyens"],
   [/middleweight/i, "Poids moyens"],
   [/super lightweight|light welterweight/i, "Poids super-légers"],
-  [/welterweight/i, "Poids mi-moyens"],
+  [/welte?r?weight/i, "Poids mi-moyens"], // « Welteweight » : faute de frappe vue sur Wikipédia
   [/lightweight/i, "Poids légers"],
   [/super featherweight/i, "Poids super-plumes"],
   [/featherweight/i, "Poids plumes"],
@@ -216,17 +216,24 @@ export function weightFr(raw: string): string {
   return discipline ? `${discipline} · ${label}` : label;
 }
 
-/** « Main card (Paramount+ / CBS) » → « Carte principale · Paramount+ / CBS ». */
+const SEGMENTS: [RegExp, string][] = [
+  [/early prelim/i, "Préliminaires d'ouverture"],
+  [/prelim|lead card|undercard/i, "Préliminaires"],
+  [/main card/i, "Carte principale"],
+  [/^fight card$/i, "Carte"],
+  [/^opening/i, "Ouverture de la soirée"],
+  [/^kickboxing bouts?$/i, "Combats de kickboxing"],
+  [/^muay thai bouts?$/i, "Combats de muay thaï"],
+  [/^(submission )?grappling bouts?$/i, "Combats de grappling"],
+  [/^boxing bouts?$/i, "Combats de boxe"],
+  [/^mma bouts?$/i, "Combats de MMA"],
+];
+
+/** « Main card (Paramount+ / CBS) » → « Carte principale · Paramount+ / CBS » ; un nom inconnu reste en anglais. */
 export function segmentFr(raw: string): string {
   const m = /^(.*?)\s*\((.+)\)\s*$/.exec(raw);
   const base = (m ? m[1] : raw).trim();
-  const fr = /early prelim/i.test(base)
-    ? "Préliminaires d'ouverture"
-    : /prelim|lead card|undercard/i.test(base)
-      ? "Préliminaires"
-      : /main card/i.test(base)
-        ? "Carte principale"
-        : base;
+  const fr = SEGMENTS.find(([re]) => re.test(base))?.[1] ?? base;
   return m ? `${fr} · ${m[2]}` : fr;
 }
 

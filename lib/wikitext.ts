@@ -285,10 +285,10 @@ function bout(weight: string, a: string, vs: string, b: string, notes: string): 
   if (!done && !/^vs\.?$/i.test(sep)) return null;
   const name = (s: string) => {
     const n = plain(s).replace(/\s*\((?:c|ic|interim c)\)/gi, "").trim();
-    return /^(tba|tbd)$/i.test(n) ? "À désigner" : n;
+    return /^(tba|tbd)$/i.test(n) ? "" : n;
   };
   const [na, nb] = [name(a), name(b)];
-  if (!na && !nb) return null;
+  if (!na && !nb) return null; // aucun des deux adversaires connu : rien à afficher
   const title = CHAMPION.test(a) || CHAMPION.test(b) || /champion|title/i.test(plain(notes));
   return { weight: plain(weight), a: na || "À désigner", b: nb || "À désigner", title, ...(done ? { done: true } : {}) };
 }
@@ -318,7 +318,12 @@ export function parseCard(text: string): Segment[] {
       for (const row of rows) {
         const texts = row.cells.map(plain);
         if (row.header) {
-          if (texts.filter(Boolean).length === 1) segments.push({ name: segmentName(texts.find(Boolean)!), bouts: [] });
+          const named = texts.filter(Boolean);
+          if (named.length === 1) {
+            const name = segmentName(named[0]);
+            // En-têtes qui ne nomment pas un segment (nom de l'événement…) : les combats restent sur la même carte.
+            if (name || segments.at(-1)?.name) segments.push({ name, bouts: [] });
+          }
           continue;
         }
         const k = texts.findIndex((t) => /^(vs\.?|def\.?)$/i.test(t));

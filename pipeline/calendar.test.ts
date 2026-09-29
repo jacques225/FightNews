@@ -136,6 +136,28 @@ test("combats annoncés, pas encore placés sur la carte", () => {
   ]);
 });
 
+test("tableau en plusieurs parties : une seule carte, sans les combats aux deux adversaires inconnus", () => {
+  // Comme Glory 110 et Glory Collision 10 : deux en-têtes au nom de l'événement, un tournoi pas encore tiré au sort.
+  const table = (title: string, rows: string[][]) =>
+    `{|\n|-\n! colspan="8" | '''${title}'''\n|-\n! Weight Class !! !! !! !! Method !! Round !! Time !! Notes\n` +
+    rows.map((r) => `|-\n|${r[0]}\n|${r[1]}\n|vs.\n|${r[2]}\n|\n|\n|\n|\n`).join("") +
+    "|}";
+  const card = parseCard(
+    table("Glory 110", [["Featherweight 65 kg", "[[Miguel Trindade]] (c)", "Deniz Demirkapu"]]) +
+      "\n" +
+      table("Glory 110 Countdown", [["Welterweight 77 kg", "TBA", "{{TBA}}"], ["Welterweight 77 kg", "Chico Kwasi", "TBD"]]),
+  );
+  assert.deepEqual(card, [
+    {
+      name: "",
+      bouts: [
+        { weight: "Featherweight 65 kg", a: "Miguel Trindade", b: "Deniz Demirkapu", title: true },
+        { weight: "Welterweight 77 kg", a: "Chico Kwasi", b: "À désigner", title: false },
+      ],
+    },
+  ]);
+});
+
 test("le soir de l'événement, les combats disputés restent, avec leur vainqueur", () => {
   const card = parseCard(
     "{{MMAevent card|Main card}}\n{{MMAevent bout|Lightweight|[[Justin Gaethje]] (c)|def.|[[Paddy Pimblett]]|KO (punch)|1|0:42|For the title.}}\n{{MMAevent bout|Welterweight|TBA|vs.|[[Kevin Holland]]||||}}",
@@ -166,6 +188,11 @@ test("libellés en français", () => {
   assert.equal(segmentFr("Main card (Paramount+ / CBS)"), "Carte principale · Paramount+ / CBS");
   assert.equal(segmentFr("Early preliminary card (Paramount+)"), "Préliminaires d'ouverture · Paramount+");
   assert.equal(segmentFr("Preliminary card"), "Préliminaires");
+  assert.equal(segmentFr("Fight card (Paramount+)"), "Carte · Paramount+");
+  assert.equal(segmentFr("Kickboxing bouts"), "Combats de kickboxing");
+  assert.equal(segmentFr("Opening Ceremony: Rizin MMA Special Rules (5min / 2R)"), "Ouverture de la soirée · 5min / 2R");
+  assert.equal(segmentFr("Superfight series"), "Superfight series");
+  assert.equal(weightFr("Welteweight"), "Poids mi-moyens");
   assert.equal(shortName("UFC 332: Silva vs. Wang"), "UFC 332");
   assert.equal(shortName("Rizin: New Year's Eve Event"), "Rizin: New Year's Eve Event");
   assert.deepEqual(dateParts("2026-10-03"), { weekday: "sam.", day: "3", month: "oct.", long: "samedi 3 octobre 2026" });
