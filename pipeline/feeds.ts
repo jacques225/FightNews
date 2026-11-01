@@ -144,7 +144,7 @@ function xmlError(e: Error, xml: string) {
 }
 
 // La plupart des flux sont en UTF-8, quelques-uns en ISO-8859-1 : on lit l'encodage annoncé.
-function decode(buf: Buffer, contentType: string | undefined) {
+export function decode(buf: Buffer, contentType: string | undefined) {
   const head = new TextDecoder("latin1").decode(buf.subarray(0, 200));
   const charset =
     /charset=["']?([\w-]+)/i.exec(contentType ?? "")?.[1] ?? /encoding=["']([\w-]+)["']/i.exec(head)?.[1] ?? "utf-8";
@@ -235,7 +235,7 @@ function firstImage(html: string | undefined): string | undefined {
 const attr = (tag: string, name: string) => new RegExp(`\\s${name}\\s*=\\s*["']([^"']+)["']`, "i").exec(tag)?.[1];
 
 /** Adresse https de la photo, ou rien si elle n'est pas exploitable. */
-function photoUrl(raw: string | undefined): string | undefined {
+export function photoUrl(raw: string | undefined): string | undefined {
   if (!raw) return;
   // Le site est en https : une image en http serait bloquée par le navigateur.
   const url = decodeEntities(raw.trim()).replace(/^\/\//, "https://").replace(/^http:\/\//i, "https://");

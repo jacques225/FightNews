@@ -7,7 +7,8 @@
  * Usage : npm run sources:check
  */
 import { appendFileSync } from "node:fs";
-import { MAX_NEW_PER_RUN, UnavailableError, download, eachSource, escapeRe, imageOf, itemDate, readFeed, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, UnavailableError, eachSource, imageOf, itemDate, readFeed, type Source } from "./feeds";
+import { robotsForbids } from "./robots";
 
 const STALE_DAYS = 30;
 const DAY = 86400_000;
@@ -29,49 +30,6 @@ function age(iso: string) {
 const isStale = (r: Result) => Date.now() - new Date(r.latest!).getTime() > STALE_DAYS * DAY;
 // Un flux dont tous les articles datent de moins de 24 h en publie sans doute plus qu'il n'en affiche.
 const isFull = (r: Result) => r.items > 0 && r.lastDay.length === r.items;
-
-/**
- * Le robots.txt du site interdit-il à FightNewsBot de lire ce flux ? Renvoie la règle qui l'interdit, sinon null.
- * (blocs User-agent, règles Allow / Disallow, jokers * et $ : la règle la plus longue l'emporte, Allow à égalité)
- */
-async function robotsForbids(feedUrl: string): Promise<string | null> {
-  const url = new URL(feedUrl);
-  let text: string;
-  try {
-    const res = await download(`${url.origin}/robots.txt`);
-    if (res.status >= 300) return null; // pas de robots.txt : rien n'est interdit
-    text = res.body.toString("utf8");
-  } catch {
-    return null; // injoignable : la lecture du flux dira si le site répond
-  }
-  const groups: { agents: string[]; rules: { allow: boolean; path: string }[] }[] = [];
-  let readingAgents = false;
-  for (const line of text.split(/\r?\n/)) {
-    const m = /^\s*([\w-]+)\s*:\s*(.*?)\s*(#.*)?$/.exec(line);
-    if (!m) continue;
-    const key = m[1].toLowerCase();
-    if (key === "user-agent") {
-      if (!readingAgents) groups.push({ agents: [], rules: [] });
-      groups[groups.length - 1].agents.push(m[2].toLowerCase());
-      readingAgents = true;
-      continue;
-    }
-    readingAgents = false;
-    if ((key === "allow" || key === "disallow") && m[2] && groups.length) {
-      groups[groups.length - 1].rules.push({ allow: key === "allow", path: m[2] });
-    }
-  }
-  // On applique le bloc qui nomme FightNewsBot, sinon celui de "*".
-  const ours = groups.filter((g) => g.agents.includes("fightnewsbot"));
-  const rules = (ours.length ? ours : groups.filter((g) => g.agents.includes("*"))).flatMap((g) => g.rules);
-  const path = url.pathname + url.search;
-  let best: { allow: boolean; path: string } | undefined;
-  for (const r of rules) {
-    const re = new RegExp("^" + r.path.split("*").map(escapeRe).join(".*").replace(/\\\$$/, "$"));
-    if (re.test(path) && (!best || r.path.length > best.path.length || (r.path.length === best.path.length && r.allow))) best = r;
-  }
-  return best && !best.allow ? `Disallow: ${best.path}` : null;
-}
 
 // Un site peut être lent ou indisponible un instant : on réessaie une fois avant de le compter en panne.
 async function readFeedTwice(url: string) {
