@@ -12,55 +12,54 @@ import type { Article } from "@/lib/types";
 export const revalidate = 300; // la page se régénère toutes les 5 min
 
 export default async function Home() {
-  const [articles, lifestyle, events] = await Promise.all([getLatest(30), getLatest(4, LIFESTYLE), getUpcomingEvents()]);
-  const [hero, ...rest] = articles;
   const sports = SPORTS.filter((s) => s.slug !== LIFESTYLE);
+  // Les dernières actus, puis 5 par rubrique pour que chaque bloc soit plein.
+  const [articles, lifestyle, events, ...bySport] = await Promise.all([
+    getLatest(12),
+    getLatest(4, LIFESTYLE),
+    getUpcomingEvents(),
+    ...sports.map((s) => getLatest(5, s.slug)),
+  ]);
+  const [hero, ...rest] = articles;
 
   return (
     <>
-      {rest.length > 0 && <Ticker articles={rest.slice(0, 6)} />}
-
       {hero && (
-        <section className="hero-grid" aria-label="À la une">
+        <section className="front" aria-labelledby="front-title">
+          <h1 id="front-title" className="sr-only">FightNews, l'actu de tous les sports de combat</h1>
           <ArticleCard article={hero} large />
           <div className="latest">
             <h2 className="latest-title">
               <span className="live-dot" aria-hidden="true" />
-              Les plus récentes
+              À l'instant
             </h2>
-            <ol className="latest-list">
-              {rest.slice(0, 5).map((a, i) => (
-                <LatestItem key={a.id} article={a} rank={i + 1} />
-              ))}
-            </ol>
-            <Link href="/actus" className="latest-more">
+            <ul className="latest-list">
+              {rest.slice(0, 6).map((a) => <LatestItem key={a.id} article={a} />)}
+            </ul>
+            <Link href="/actus" className="text-link">
               Toute l'actu <Arrow />
             </Link>
           </div>
         </section>
       )}
 
-      <nav className="sport-rail" aria-label="Accès rapide aux rubriques">
-        {SPORTS.map((s) => (
-          <Link key={s.slug} href={`/${s.slug}`} style={{ ["--c" as string]: s.color }}>
-            <span className="sport-rail-name">{s.name}</span>
-            <span className="sport-rail-desc">{s.description}</span>
-          </Link>
-        ))}
-      </nav>
-
       <UpcomingBlock events={events.slice(0, 4)} />
 
       {sports.map((sport, i) => (
         <Fragment key={sport.slug}>
-          <SportBlock slug={sport.slug} articles={articles.filter((a) => a.sport === sport.slug).slice(0, 4)} />
+          <SportBlock
+            slug={sport.slug}
+            alt={i % 2 === 1}
+            // La une n'est pas répétée dans le bloc de sa rubrique.
+            articles={bySport[i].filter((a) => a.id !== hero?.id).slice(0, 4)}
+          />
           {i === 0 && <NewsletterBand />}
           {i === 1 && <LifestyleBlock articles={lifestyle} />}
         </Fragment>
       ))}
 
       <p className="more-news">
-        <Link href="/actus" className="btn">Voir toutes les actus <Arrow /></Link>
+        <Link href="/actus" className="btn btn-ghost">Voir toutes les actus <Arrow /></Link>
       </p>
     </>
   );
@@ -74,42 +73,17 @@ function Arrow() {
   );
 }
 
-/** Bandeau défilant des derniers titres, sous l'en-tête. */
-function Ticker({ articles }: { articles: Article[] }) {
-  const items = (copy: boolean) =>
-    articles.map((a) => (
-      <Link
-        key={a.id}
-        href={`/article/${a.slug}`}
-        tabIndex={copy ? -1 : undefined}
-        style={{ ["--c" as string]: getSport(a.sport)?.color }}
-      >
-        <b>{getSport(a.sport)?.short}</b> {a.title}
-      </Link>
-    ));
-  return (
-    <div className="ticker">
-      <span className="ticker-label">Dernière minute</span>
-      <div className="ticker-track">
-        <div className="ticker-items">
-          {items(false)}
-          {/* Copie pour une boucle continue, ignorée au clavier et par les lecteurs d'écran */}
-          <span className="ticker-copy" aria-hidden="true">{items(true)}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LatestItem({ article, rank }: { article: Article; rank: number }) {
+function LatestItem({ article }: { article: Article }) {
   const sport = getSport(article.sport);
   return (
     <li style={{ ["--c" as string]: sport?.color }}>
-      <span className="latest-rank" aria-hidden="true">{String(rank).padStart(2, "0")}</span>
       <Link href={`/article/${article.slug}`}>
-        <span className="latest-sport">{sport?.short}</span>
         <span className="latest-headline">{article.title}</span>
-        <span className="meta">{timeAgo(article.published_at)} · via {article.source_name}</span>
+        <span className="meta">
+          <span className="meta-sport">{sport?.short}</span>
+          <span>{timeAgo(article.published_at)}</span>
+          <span>{article.source_name}</span>
+        </span>
       </Link>
     </li>
   );
@@ -117,13 +91,14 @@ function LatestItem({ article, rank }: { article: Article; rank: number }) {
 
 function NewsletterBand() {
   return (
-    <section className="nl-band">
-      <div>
-        <span className="kicker kicker-light">Newsletter gratuite</span>
+    <section className="nl-band" data-reveal>
+      <div data-reveal-item>
         <h2>Le récap de la semaine, chaque vendredi</h2>
-        <p>Résultats, annonces et nouveautés lifestyle : l'essentiel en cinq minutes, dans ta boîte mail.</p>
+        <p>Résultats, annonces et nouveautés lifestyle : l'essentiel des sports de combat en cinq minutes, gratuit.</p>
       </div>
-      <NewsletterForm />
+      <div data-reveal-item>
+        <NewsletterForm />
+      </div>
     </section>
   );
 }
@@ -132,16 +107,16 @@ function NewsletterBand() {
 function UpcomingBlock({ events }: { events: FightEvent[] }) {
   if (!events.length) return null;
   return (
-    <section className="section section-compact">
+    <section className="section upcoming" data-reveal>
       <div className="section-head">
         <h2>Prochains combats</h2>
-        <Link href="/calendrier">Tout le calendrier <Arrow /></Link>
+        <Link href="/calendrier" className="text-link">Tout le calendrier <Arrow /></Link>
       </div>
       <ol className="cal-strip">
         {events.map((e) => {
           const main = mainBout(e);
           return (
-            <li key={e.id} style={{ ["--c" as string]: getSport(e.sport)?.color }}>
+            <li key={e.id} style={{ ["--c" as string]: getSport(e.sport)?.color }} data-reveal-item>
               <Link href={`/calendrier#${e.id}`}>
                 <EventDate date={e.date} />
                 <div className="cal-body">
@@ -158,18 +133,36 @@ function UpcomingBlock({ events }: { events: FightEvent[] }) {
   );
 }
 
-function SportBlock({ slug, articles }: { slug: string; articles: Article[] }) {
+function SportBlock({ slug, articles, alt }: { slug: string; articles: Article[]; alt: boolean }) {
   const sport = getSport(slug);
   if (!sport || !articles.length) return null;
+  const [lead, ...others] = articles;
   return (
-    <section className="section" style={{ ["--c" as string]: sport.color }}>
+    <section className={`section sport-block ${alt ? "sport-block-alt" : ""}`} style={{ ["--c" as string]: sport.color }} data-reveal>
       <div className="section-head">
-        <h2>{sport.name}</h2>
-        <Link href={`/${sport.slug}`}>Tout voir <Arrow /></Link>
+        <h2>
+          <Link href={`/${sport.slug}`}>{sport.name}</Link>
+        </h2>
+        <Link href={`/${sport.slug}`} className="text-link">Toute la rubrique <Arrow /></Link>
       </div>
-      <div className="grid grid-lead">
-        {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
-      </div>
+      {articles.length === 1 ? (
+        <div className="sport-solo">
+          <ArticleCard article={lead} variant="feature" />
+        </div>
+      ) : alt && articles.length === 4 ? (
+        <div className="grid grid-4">
+          {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
+        </div>
+      ) : (
+        <div className="sport-split">
+          <ArticleCard article={lead} variant="feature" />
+          {others.length > 0 && (
+            <div className="sport-list">
+              {others.map((a) => <ArticleCard key={a.id} article={a} variant="compact" />)}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -177,15 +170,14 @@ function SportBlock({ slug, articles }: { slug: string; articles: Article[] }) {
 function LifestyleBlock({ articles }: { articles: Article[] }) {
   if (!articles.length) return null;
   return (
-    <section className="section lifestyle-block">
-      <div className="lifestyle-head">
-        <div>
-          <span className="kicker">Collections · Équipement · Culture fight</span>
-          <h2>Lifestyle</h2>
-        </div>
-        <Link href={`/${LIFESTYLE}`}>Tout voir <Arrow /></Link>
+    <section className="section lifestyle-block" style={{ ["--c" as string]: getSport(LIFESTYLE)?.color }} data-reveal>
+      <div className="section-head">
+        <h2>
+          <Link href={`/${LIFESTYLE}`}>Lifestyle</Link>
+        </h2>
+        <Link href={`/${LIFESTYLE}`} className="text-link">Collections, équipement, culture fight <Arrow /></Link>
       </div>
-      <div className="grid grid-lead">
+      <div className="grid grid-4">
         {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
       </div>
     </section>

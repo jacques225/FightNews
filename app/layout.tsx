@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
+import Reveal from "@/components/Reveal";
 import NewsletterForm from "@/components/NewsletterForm";
 import "./globals.css";
 
@@ -15,15 +16,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@400;500;600;700&display=swap" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,400..800&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" />
       </head>
       <body>
         <Header />
         <main className="container">{children}</main>
+        <Reveal />
         <footer className="footer">
           <div className="container footer-inner">
             <div>
-              <p className="logo">FIGHT<span>NEWS</span></p>
+              <p className="logo">Fight<span>News</span></p>
               <p>Les titres et extraits de l'actualité des sports de combat, avec leurs sources.</p>
               <p>
                 <Link href="/actus">Toute l'actu</Link> · <Link href="/calendrier">Calendrier</Link> ·{" "}
