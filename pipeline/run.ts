@@ -2,9 +2,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { MAX_NEW_PER_RUN, eachSource, imageOf, itemDate, publisherOf, readFeed, snippetOf, type Source } from "./feeds";
 import { excerpt, isRepeat, sportOf, isCombatNews } from "./without-ai";
+import { previewImage } from "./preview";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const MAX_AGE_HOURS = 48;
+// Infos déjà enregistrées sans photo dont on cherche la photo d'aperçu à chaque passage.
+const PREVIEWS_PER_RUN = 20;
+// image_url vaut "" quand la page de l'article a été lue sans y trouver de photo : on ne la relit pas.
+const NO_PREVIEW = "";
 
 type Item = { title: string; link: string; snippet: string; image?: string; date: string; publisher: string; source: Source };
 
@@ -57,11 +62,45 @@ async function addMissingImages(items: Item[], known: Map<string, boolean>) {
   let added = 0;
   for (const item of items) {
     if (!item.image || !known.get(item.link)) continue;
-    const { error } = await supabase.from("articles").update({ image_url: item.image }).eq("source_url", item.link).is("image_url", null);
+    const { data, error } = await supabase.from("articles").update({ image_url: item.image })
+      .eq("source_url", item.link).or("image_url.is.null,image_url.eq.").select("id");
     if (error) console.warn(`  photo non ajoutée (${item.link}) : ${error.message}`);
-    else added++;
+    else added += data.length;
   }
   if (added) console.log(`${added} photos ajoutées à des infos déjà enregistrées`);
+}
+
+/** Photo d'aperçu de la page d'un article, sans faire échouer le passage si le site ne répond pas. */
+async function tryPreview(link: string): Promise<string | null | undefined> {
+  try {
+    return await previewImage(link);
+  } catch (e) {
+    console.warn(`  aperçu indisponible (${link}) : ${(e as Error).message}`);
+    return undefined; // on réessaiera au prochain passage
+  }
+}
+
+/**
+ * Infos enregistrées sans photo (médias qui n'en mettent pas dans leur flux) : on cherche la photo
+ * d'aperçu de leur page, les plus récentes d'abord, quelques-unes par passage.
+ */
+async function addPreviewImages() {
+  if (!supabase || DRY_RUN) return;
+  const { data, error } = await supabase.from("articles").select("id, source_url")
+    .is("image_url", null).in("status", ["draft", "published"])
+    .order("published_at", { ascending: false }).limit(PREVIEWS_PER_RUN);
+  if (error) return console.warn(`Infos sans photo indisponibles : ${error.message}`);
+  let added = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    await Promise.all(data.slice(i, i + 4).map(async (row) => {
+      const image = await tryPreview(row.source_url);
+      if (image === undefined) return;
+      const { error } = await supabase.from("articles").update({ image_url: image ?? NO_PREVIEW }).eq("id", row.id).is("image_url", null);
+      if (error) console.warn(`  photo d'aperçu non ajoutée (${row.source_url}) : ${error.message}`);
+      else if (image) added++;
+    }));
+  }
+  console.log(`${added} photos d'aperçu ajoutées sur ${data.length} infos sans photo examinées`);
 }
 
 /** Complète les imports dont le flux plaçait l'extrait dans content:encoded. */
@@ -144,6 +183,7 @@ async function main() {
   const known = await knownLinks(unique);
   await addMissingImages(unique, known);
   await addMissingExcerpts(unique);
+  await addPreviewImages();
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
   const fresh = unique
     .filter((i) => !known.has(i.link))
@@ -156,6 +196,10 @@ async function main() {
     if (DRY_RUN) {
       console.log(`• [${item.source.sport}]${item.source.official ? " [officiel]" : ""} ${item.title} (${item.publisher})\n  ${item.link}`);
       if (item.image) console.log(`  photo : ${item.image}`);
+      else {
+        const preview = await tryPreview(item.link);
+        console.log(preview ? `  photo d'aperçu : ${preview}` : "  pas de photo");
+      }
       continue;
     }
     if (isRepeat(recent, item.title) || (item.source.mixed && !isCombatNews(item.title, item.snippet))) {
@@ -164,12 +208,15 @@ async function main() {
       await markRejected(item, reason);
       continue;
     }
+    // Pas de photo dans le flux : celle de l'aperçu de sa page. Site muet : null, on réessaiera plus tard.
+    const preview = item.image ? undefined : await tryPreview(item.link);
+    const image = item.image ?? (preview === undefined ? null : preview ?? NO_PREVIEW);
     const title = item.title.trim().slice(0, 300);
     const content = { title, summary: excerpt(item.snippet, title), body: "", sport: sportOf(title, item.source.sport), tags: [] };
     const row = {
       slug: `${slugify(content.title)}-${Date.now().toString(36)}`,
       ...content,
-      image_url: item.image ?? null, // photo fournie par le média dans son flux, affichée depuis son serveur
+      image_url: image, // photo du média (flux ou aperçu de sa page), affichée depuis son serveur
       source_name: item.publisher,
       source_url: item.link,
       source_official: Boolean(item.source.official),

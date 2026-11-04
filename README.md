@@ -2,6 +2,7 @@
 
 Actualité des sports de combat à partir de flux RSS francophones, mise à jour toutes les 30 minutes.
 Le robot importe le titre, un extrait de 280 caractères maximum environ, la photo fournie dans le flux
+(sinon la photo d'aperçu que le média a choisie pour sa page, celle qui apparaît quand on partage son lien)
 et le lien vers le média. Aucun texte n'est généré ou traduit, aucune API d'IA n'est appelée.
 Il n'y a aucune clé OpenAI/Anthropic à configurer ni crédit IA à acheter.
 
@@ -186,6 +187,9 @@ de ONE, du KSW, d'Oktagon, de Cage Warriors, du Rizin, de Brave CF et de Glory, 
 - Hébergement, base, GitHub Actions et newsletter : quotas et éventuels frais des services existants.
 - Titre et court extrait repris du flux, affichés comme un extrait avec attribution ; aucune copie intégrale.
 - Photo fournie par le média, affichée depuis son serveur, avec crédit et visuel de remplacement si elle échoue.
+  Sans photo dans le flux, le robot lit une fois la page de l'article (si robots.txt le permet) pour y prendre
+  la photo d'aperçu (`og:image`, `twitter:image`) ; 20 anciennes infos sans photo sont complétées à chaque passage
+  (`pipeline/preview.ts`). `image_url` vide (`""`) veut dire « page lue, pas de photo » : elle n'est pas relue.
 - Déduplication par URL et titre normalisé ; les liens écartés ne sont pas retraités à chaque passage.
 - Publication automatique sur GitHub ; `PIPELINE_DEFAULT_STATUS=draft` permet la validation manuelle.
 - Respecter les conditions d'utilisation des sources ajoutées.
