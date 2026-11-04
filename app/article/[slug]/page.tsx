@@ -42,6 +42,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
+            <p className="meta">
+              Lecteur YouTube : <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">conditions d'utilisation</a>
+              {" · "}<Link href="/confidentialite">confidentialité</Link>
+            </p>
           </div>
         ) : (
           article.image_url && <SourcePhoto src={article.image_url} credit={article.source_name} eager />

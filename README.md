@@ -175,7 +175,13 @@ lues par l'**API YouTube Data v3**, gratuite. Il faut une clé, à créer une fo
 3. « Identifiants » > « Créer des identifiants » > « Clé API ». La restreindre à « YouTube Data API v3 ».
 4. Sur GitHub : Settings > Secrets and variables > Actions > New repository secret, nom `YOUTUBE_API_KEY`.
 
-Le robot utilise environ 240 unités par jour sur les 10 000 offertes. Sans clé, les chaînes sont simplement
+Règles de l'API YouTube respectées par le robot : les titres, textes et miniatures des vidéos sont rafraîchis
+au moins chaque semaine (colonne `refreshed_at`, ajoutée par `supabase/schema.sql`), une vidéo supprimée ou
+privée est retirée du site, et la page « Confidentialité » mentionne YouTube avec ses conditions d'utilisation.
+Point flou : les règles interdisent d'« agréger » les données de l'API de plusieurs propriétaires de chaînes.
+Elles visent surtout les statistiques, mais Google pourrait couper la clé ; le reste du robot continuerait.
+
+Le robot utilise environ 250 unités par jour sur les 10 000 offertes. Sans clé, les chaînes sont simplement
 ignorées (avertissement dans le journal) et les flux RSS continuent normalement.
 
 Pour ajouter une chaîne : son identifiant `UC…` (visible dans le code de la page de la chaîne, `"externalId"`).

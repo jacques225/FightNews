@@ -128,6 +128,29 @@ export async function readYouTube(channelId: string) {
   return { items: youTubeItems(data.items ?? []) };
 }
 
+/**
+ * État actuel de vidéos déjà enregistrées (50 par appel, 1 unité chacun). Les règles de l'API YouTube
+ * demandent de rafraîchir ou supprimer ses données au bout de 30 jours : le robot s'en sert pour remettre
+ * à jour titre, texte et miniature, et retirer les vidéos supprimées ou devenues privées.
+ * Renvoie, pour chaque identifiant encore public, ses nouvelles données ; un identifiant absent a disparu.
+ */
+export async function currentVideos(ids: string[]) {
+  const key = process.env.YOUTUBE_API_KEY?.trim();
+  if (!key) throw new MissingKeyError("clé YOUTUBE_API_KEY absente");
+  const found = new Map<string, ReturnType<typeof youTubeItems>[number]>();
+  for (let i = 0; i < ids.length; i += 50) {
+    const batch = ids.slice(i, i + 50);
+    const params = new URLSearchParams({ part: "snippet,status", id: batch.join(","), maxResults: "50", key });
+    const res = await download(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+    const data = JSON.parse(res.body.toString("utf8") || "{}") as { items?: (YouTubeItem & { id?: string })[]; error?: { message?: string } };
+    if (res.status >= 300) throw new Error(`API YouTube ${res.status} : ${data.error?.message ?? "refus"}`);
+    // La réponse de videos.list n'a pas de contentDetails.videoId : on le reconstitue depuis id.
+    const items = youTubeItems((data.items ?? []).map((v) => ({ ...v, contentDetails: { videoId: v.id } })));
+    for (const item of items) found.set(new URL(item.link).searchParams.get("v")!, item);
+  }
+  return found;
+}
+
 /** Vidéos publiques de la réponse de l'API, au format d'un flux (titre, lien, date, résumé, miniature). */
 export function youTubeItems(items: YouTubeItem[]) {
   return items

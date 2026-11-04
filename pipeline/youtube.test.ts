@@ -44,3 +44,11 @@ test("le site reconnaît une vidéo YouTube à son adresse", () => {
   assert.equal(youTubeId("https://www.youtube.com/shorts/abcdefghijk"), "abcdefghijk");
   assert.equal(youTubeId("https://www.lequipe.fr/Mma/article.html"), null);
 });
+
+test("sans clé d'API, le rafraîchissement des vidéos est refusé proprement", async () => {
+  const saved = process.env.YOUTUBE_API_KEY;
+  delete process.env.YOUTUBE_API_KEY;
+  const { currentVideos } = await import("./feeds");
+  await assert.rejects(currentVideos(["abcdefghijk"]), MissingKeyError);
+  if (saved !== undefined) process.env.YOUTUBE_API_KEY = saved;
+});

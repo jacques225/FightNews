@@ -1,6 +1,6 @@
 /** Flux RSS français → titre, court extrait, photo et source → Supabase. Aucun appel à une IA. */
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, imageOf, itemDate, publisherOf, readSource, snippetOf, MissingKeyError, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readSource, snippetOf, MissingKeyError, currentVideos, imageOf, type Source } from "./feeds";
 import { excerpt, isRepeat, sportOf, isCombatNews } from "./without-ai";
 import { previewImage } from "./preview";
 
@@ -106,6 +106,43 @@ async function addPreviewImages() {
   console.log(`${added} photos d'aperçu ajoutées sur ${data.length} infos sans photo examinées`);
 }
 
+// Les vidéos YouTube enregistrées sont remises à jour au moins chaque semaine (les règles de l'API imposent
+// 30 jours au plus) : marge confortable si GitHub saute des passages.
+const VIDEO_REFRESH_DAYS = 7;
+const VIDEOS_PER_RUN = 200; // 4 appels à l'API, 4 unités
+
+/**
+ * Rafraîchit titre, extrait et miniature des vidéos YouTube enregistrées depuis plus d'une semaine,
+ * et retire du site celles qui ont été supprimées ou rendues privées (status « rejected », texte effacé).
+ */
+async function refreshVideos() {
+  if (!supabase || DRY_RUN || !process.env.YOUTUBE_API_KEY?.trim()) return;
+  const before = new Date(Date.now() - VIDEO_REFRESH_DAYS * 86400_000).toISOString();
+  const { data, error } = await supabase.from("articles").select("id, source_url, title")
+    .like("source_url", "https://www.youtube.com/watch?v=%").in("status", ["draft", "published"])
+    .lt("refreshed_at", before).order("refreshed_at").limit(VIDEOS_PER_RUN);
+  if (error) return console.warn(`Vidéos à rafraîchir indisponibles : ${error.message}`);
+  if (!data.length) return;
+  let current;
+  try {
+    current = await currentVideos(data.map((r) => new URL(r.source_url).searchParams.get("v")!));
+  } catch (e) {
+    return console.warn(`Rafraîchissement des vidéos impossible : ${(e as Error).message}`);
+  }
+  const now = new Date().toISOString();
+  let gone = 0;
+  for (const row of data) {
+    const video = current.get(new URL(row.source_url).searchParams.get("v")!);
+    const update = video
+      ? { title: video.title.trim().slice(0, 300), summary: excerpt(video.contentSnippet, video.title), image_url: imageOf(video) ?? null, refreshed_at: now }
+      : { status: "rejected", title: "Vidéo retirée", summary: "", image_url: null, refreshed_at: now };
+    if (!video) gone++;
+    const { error } = await supabase.from("articles").update(update).eq("id", row.id);
+    if (error) console.warn(`  vidéo non rafraîchie (${row.source_url}) : ${error.message}`);
+  }
+  console.log(`${data.length} vidéos YouTube rafraîchies, dont ${gone} retirées (supprimées ou privées)`);
+}
+
 /** Complète les imports dont le flux plaçait l'extrait dans content:encoded. */
 async function addMissingExcerpts(items: Item[]) {
   if (!supabase || DRY_RUN) return;
@@ -187,6 +224,7 @@ async function main() {
   await addMissingImages(unique, known);
   await addMissingExcerpts(unique);
   await addPreviewImages();
+  await refreshVideos();
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
   const fresh = unique
     .filter((i) => !known.has(i.link))
