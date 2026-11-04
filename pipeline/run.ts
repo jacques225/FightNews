@@ -1,6 +1,6 @@
 /** Flux RSS français → titre, court extrait, photo et source → Supabase. Aucun appel à une IA. */
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, imageOf, itemDate, publisherOf, readFeed, snippetOf, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, eachSource, imageOf, itemDate, publisherOf, readSource, snippetOf, MissingKeyError, type Source } from "./feeds";
 import { excerpt, isRepeat, sportOf, isCombatNews } from "./without-ai";
 import { previewImage } from "./preview";
 
@@ -20,10 +20,11 @@ const supabase =
 const STATUS = process.env.PIPELINE_DEFAULT_STATUS === "published" ? "published" : "draft";
 
 async function fetchAll(): Promise<Item[]> {
+  let skippedYouTube = 0;
   const perSource = await eachSource(async (source) => {
     const items: Item[] = [];
     try {
-      const feed = await readFeed(source.url);
+      const feed = await readSource(source);
       for (const it of feed.items) {
         if (!it.link || !it.title) continue;
         const date = itemDate(it.isoDate ?? it.pubDate);
@@ -34,10 +35,12 @@ async function fetchAll(): Promise<Item[]> {
       }
       console.log(`✓ ${source.name} : ${feed.items.length} entrées`);
     } catch (e) {
-      console.warn(`✗ ${source.name} : ${(e as Error).message}`);
+      if (e instanceof MissingKeyError) skippedYouTube++;
+      else console.warn(`✗ ${source.name} : ${(e as Error).message}`);
     }
     return items;
   });
+  if (skippedYouTube) console.warn(`⚠ ${skippedYouTube} chaînes YouTube ignorées : secret YOUTUBE_API_KEY absent (voir le README, « Les sources »).`);
   return perSource.flat();
 }
 
