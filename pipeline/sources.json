@@ -88,5 +88,41 @@
     "sport": "lutte",
     "official": true,
     "language": "fr"
+  },
+  {
+    "name": "RMC Sport Combat (YouTube)",
+    "url": "https://www.youtube.com/channel/UCDqrC9HH1w7hyZCspmukU6A",
+    "youtube": "UCDqrC9HH1w7hyZCspmukU6A",
+    "sport": "mma",
+    "language": "fr"
+  },
+  {
+    "name": "Hexagone MMA (YouTube)",
+    "url": "https://www.youtube.com/channel/UC2TnvcctRLs4GkwjnBpRXhg",
+    "youtube": "UC2TnvcctRLs4GkwjnBpRXhg",
+    "sport": "mma",
+    "official": true,
+    "language": "fr"
+  },
+  {
+    "name": "Actu MMA (YouTube)",
+    "url": "https://www.youtube.com/channel/UC-MGqnIArTaswmRL7Ux1dIA",
+    "youtube": "UC-MGqnIArTaswmRL7Ux1dIA",
+    "sport": "mma",
+    "language": "fr"
+  },
+  {
+    "name": "BoxeMag (YouTube)",
+    "url": "https://www.youtube.com/channel/UCOm5VUEtfrBV4fkNbokJ6xQ",
+    "youtube": "UCOm5VUEtfrBV4fkNbokJ6xQ",
+    "sport": "boxe",
+    "language": "fr"
+  },
+  {
+    "name": "L'Esprit du Judo (YouTube)",
+    "url": "https://www.youtube.com/channel/UCKJnGYMsdmHbHhWwWx_Bgew",
+    "youtube": "UCKJnGYMsdmHbHhWwWx_Bgew",
+    "sport": "judo",
+    "language": "fr"
   }
 ]

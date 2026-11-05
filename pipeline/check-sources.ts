@@ -7,7 +7,7 @@
  * Usage : npm run sources:check
  */
 import { appendFileSync } from "node:fs";
-import { MAX_NEW_PER_RUN, UnavailableError, eachSource, imageOf, itemDate, readFeed, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, UnavailableError, eachSource, imageOf, itemDate, readSource, type Source, MissingKeyError } from "./feeds";
 import { robotsForbids } from "./robots";
 
 const STALE_DAYS = 30;
@@ -32,21 +32,23 @@ const isStale = (r: Result) => Date.now() - new Date(r.latest!).getTime() > STAL
 const isFull = (r: Result) => r.items > 0 && r.lastDay.length === r.items;
 
 // Un site peut être lent ou indisponible un instant : on réessaie une fois avant de le compter en panne.
-async function readFeedTwice(url: string) {
+async function readTwice(s: Source) {
   try {
-    return await readFeed(url);
-  } catch {
+    return await readSource(s);
+  } catch (e) {
+    if (e instanceof MissingKeyError) throw e; // inutile de réessayer sans clé
     await new Promise((resolve) => setTimeout(resolve, 5000));
-    return readFeed(url);
+    return readSource(s);
   }
 }
 
 async function check(s: Source): Promise<Result> {
   const base = { name: s.name, sport: s.sport, official: Boolean(s.official), url: s.url, lastDay: [] as string[] };
-  const forbidden = await robotsForbids(s.url);
+  // Une chaîne YouTube se lit par l'API officielle de Google, pas en visitant le site : pas de robots.txt à lire.
+  const forbidden = s.youtube ? null : await robotsForbids(s.url);
   if (forbidden) return { ...base, ok: false, items: 0, error: `le site interdit aux robots de lire ce flux (robots.txt : « ${forbidden} »)` };
   try {
-    const feed = await readFeedTwice(s.url);
+    const feed = await readTwice(s);
     const dated = feed.items
       .map((it) => ({ title: it.title ?? "", link: it.link ?? "", date: itemDate(it.isoDate ?? it.pubDate), photo: imageOf(it) }))
       .sort((a, b) => b.date.localeCompare(a.date));

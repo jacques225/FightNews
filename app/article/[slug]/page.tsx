@@ -4,6 +4,7 @@ import ArticleCard from "@/components/ArticleCard";
 import SourcePhoto from "@/components/SourcePhoto";
 import { fullDate, getArticle, getEarlier } from "@/lib/data";
 import { getSport } from "@/lib/sports";
+import { youTubeId } from "@/lib/youtube";
 
 export const revalidate = 300;
 
@@ -22,6 +23,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound();
   const sport = getSport(article.sport);
   const earlier = await getEarlier(article);
+  const video = youTubeId(article.source_url);
 
   return (
     <>
@@ -29,8 +31,26 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <Link href={`/${article.sport}`} className="article-sport" style={{ ["--c" as string]: sport?.color }}>{sport?.name}</Link>
         <h1>{article.title}</h1>
         <p className="meta">Publié le {fullDate(article.published_at)}</p>
-        {article.image_url && <SourcePhoto src={article.image_url} credit={article.source_name} eager />}
-        {!article.body && <p className="meta">Extrait de {article.source_name}</p>}
+        {video ? (
+          // Vidéo d'une chaîne YouTube : lecteur officiel de YouTube (mode sans cookie tant qu'on ne lance pas la vidéo).
+          <div className="article-video">
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${video}`}
+              title={article.title}
+              loading="lazy"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+            <p className="meta">
+              Lecteur YouTube : <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">conditions d'utilisation</a>
+              {" · "}<Link href="/confidentialite">confidentialité</Link>
+            </p>
+          </div>
+        ) : (
+          article.image_url && <SourcePhoto src={article.image_url} credit={article.source_name} eager />
+        )}
+        {!article.body && <p className="meta">{video ? "Vidéo de" : "Extrait de"} {article.source_name}</p>}
         {article.summary && <p className="lead">{article.summary}</p>}
         {!article.body && !article.summary && <p>Ce média ne fournit pas d'extrait pour cette actualité.</p>}
         {article.body ? (
@@ -39,7 +59,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           // Brève enregistrée sans IA : juste un extrait, l'article complet est chez son média.
           <p>
             <a className="btn" href={article.source_url} target="_blank" rel="noopener">
-              Lire l'article complet sur {article.source_name}
+              {video ? "Voir la vidéo sur YouTube" : `Lire l'article complet sur ${article.source_name}`}
             </a>
           </p>
         )}

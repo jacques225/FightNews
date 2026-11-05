@@ -289,6 +289,9 @@ main.container { padding-top: 36px; min-height: 70vh; }
 .article-photo img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-sm); background: var(--surface-2); }
 .article-photo figcaption { margin-top: 8px; color: var(--ink-3); font-size: 13px; }
 .article-photo + .meta { margin-top: 2px; }
+.article-video { margin: 28px 0 0; }
+.article-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radius-sm); background: #000; }
+.article-video .meta { margin-top: 8px; }
 .article > p:not(.meta) { font-family: var(--serif); font-size: 20px; line-height: 1.65; }
 .article > p.lead { font-size: 23px; line-height: 1.5; margin-top: 28px; color: var(--ink); }
 .article p .btn { font-family: var(--sans); font-size: 16px; }
