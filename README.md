@@ -234,3 +234,18 @@ de ONE, du KSW, d'Oktagon, de Cage Warriors, du Rizin, de Brave CF et de Glory, 
 - Des fiches combattants, et les horaires des galas (source payante).
 - La recherche et un plan du site pour Google (sitemap).
 - Le regroupement des articles qui parlent du même événement.
+
+## Outils de design pour Claude Code
+
+Le dossier `.claude/skills/` contient des skills de design, chargés automatiquement par Claude Code dans ce dépôt :
+
+| Skill | Source | Licence |
+| --- | --- | --- |
+| `design-taste-frontend` (Taste Skill v2) | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT |
+| `high-end-visual-design`, `minimalist-ui`, `industrial-brutalist-ui`, `gpt-taste`, `stitch-design-taste`, `design-taste-frontend-v1`, `design-taste-frontend-v2-experimental` | [Leonxlnx/taste-skill-classics](https://github.com/Leonxlnx/taste-skill-classics) | MIT |
+| `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Apache 2.0 |
+| `motion` (Motion AI Kit) | [motiondivision/ai-kit](https://github.com/motiondivision/ai-kit) | MIT |
+
+`.mcp.json` déclare aussi les serveurs MCP **Playwright** (`npx @playwright/mcp`, navigateur sans écran) et **Motion** (`https://mcp.motion.dev`, recherche gratuite dans la doc de Motion), en plus de 21st.dev et Inspo. Pour mettre un skill à jour, recopier son dossier depuis sa source.
+
+Les animations du site utilisent la bibliothèque [Motion](https://motion.dev) (`components/Reveal.tsx`), et respectent le réglage « réduire les animations » du système.

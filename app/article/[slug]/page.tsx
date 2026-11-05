@@ -28,7 +28,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <article className="article">
-        <Link href={`/${article.sport}`} className="badge" style={{ background: sport?.color }}>{sport?.name}</Link>
+        <Link href={`/${article.sport}`} className="article-sport" style={{ ["--c" as string]: sport?.color }}>{sport?.name}</Link>
         <h1>{article.title}</h1>
         <p className="meta">Publié le {fullDate(article.published_at)}</p>
         {video ? (
@@ -73,12 +73,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       </article>
 
       {earlier.length > 0 && (
-        <section className="section related">
-          <div className="section-head" style={{ borderColor: sport?.color }}>
+        <section className="section related" style={{ ["--c" as string]: sport?.color }} data-reveal>
+          <div className="section-head">
             <h2>Précédemment en {sport?.name ?? "actu"}</h2>
-            <Link href={`/${article.sport}`}>Toutes les actus {sport?.short} →</Link>
+            <Link href={`/${article.sport}`} className="text-link">Toutes les actus {sport?.short} →</Link>
           </div>
-          <div className="grid">
+          <div className="grid grid-4">
             {earlier.map((a) => <ArticleCard key={a.id} article={a} />)}
           </div>
         </section>

@@ -21,7 +21,6 @@ export default async function NewsletterPage({ searchParams }: { searchParams: P
   return (
     <div className="nl-page">
       {notice && <p className={`notice notice-${notice.tone}`} role="status">{notice.text}</p>}
-      <span className="kicker">Newsletter gratuite</span>
       <h1>Le récap FightNews, chaque vendredi</h1>
       <p className="lead">
         Les résultats, les annonces de combats et les nouveautés lifestyle de la semaine, triés par rubrique.

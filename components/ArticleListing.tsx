@@ -14,8 +14,7 @@ export default async function ArticleListing({ sport: slug, page }: { sport?: st
   const basePath = sport ? `/${sport.slug}` : "/actus";
   return (
     <>
-      <div className="sport-banner" style={{ ["--c" as string]: sport?.color ?? "#e11d48" }}>
-        <span className="kicker">{sport ? "Rubrique" : "Archives"}</span>
+      <div className="page-head" style={{ ["--c" as string]: sport?.color ?? "#d21f2c" }}>
         <h1>{sport ? sport.name : "Toute l'actu"}</h1>
         <p>
           {sport ? sport.description : "Toutes les rubriques, de la plus récente à la plus ancienne."}
@@ -23,7 +22,7 @@ export default async function ArticleListing({ sport: slug, page }: { sport?: st
         </p>
       </div>
       {articles.length ? (
-        <div className="grid">
+        <div className="grid grid-3" data-reveal>
           {articles.map((a) => <ArticleCard key={a.id} article={a} />)}
         </div>
       ) : (

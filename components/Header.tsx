@@ -4,19 +4,23 @@ import NavLinks from "@/components/NavLinks";
 export default function Header() {
   return (
     <header className="header">
-      <div className="container header-inner">
+      <div className="container masthead">
         <Link href="/" className="logo" aria-label="FightNews, accueil">
-          <span className="logo-mark" aria-hidden="true">FN</span>
-          FIGHT<span>NEWS</span>
+          Fight<span>News</span>
         </Link>
-        <NavLinks />
-        <Link href="/newsletter" className="nav-cta">
+        <p className="masthead-tagline">L'actu de tous les sports de combat, avec ses sources</p>
+        <Link href="/newsletter" className="nav-cta" aria-label="Recevoir le récap de la semaine">
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="5" width="18" height="14" rx="2" />
             <path d="m3 7 9 6 9-6" />
           </svg>
-          Newsletter
+          <span>Recevoir le récap</span>
         </Link>
+      </div>
+      <div className="navbar">
+        <div className="container">
+          <NavLinks />
+        </div>
       </div>
     </header>
   );
