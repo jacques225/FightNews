@@ -18,6 +18,8 @@ create table if not exists articles (
 
 -- Ajouts après la première version (sans effet si la colonne existe déjà)
 alter table articles add column if not exists source_official boolean not null default false; -- source officielle : badge sur le site
+-- Dernière mise à jour des données d'une vidéo YouTube (les règles de l'API imposent de les rafraîchir sous 30 jours)
+alter table articles add column if not exists refreshed_at timestamptz not null default now();
 
 create index if not exists articles_sport_date on articles (sport, published_at desc);
 create index if not exists articles_status_date on articles (status, published_at desc);

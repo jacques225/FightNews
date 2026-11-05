@@ -12,6 +12,7 @@ export type Source = {
   language: "fr";     // seules les sources francophones sont actives
   mixed?: boolean;     // média multisport : filtrage des sujets sans rapport
   official?: boolean;  // site officiel (fédération, organisation) : badge "Officiel" sur le site
+  youtube?: string;    // chaîne YouTube (identifiant UC…) : lue par l'API YouTube, pas par un flux RSS
 };
 
 export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr");
@@ -93,6 +94,100 @@ export function download(url: string, redirects = 0): Promise<{ status: number; 
       reject(e);
     });
   });
+}
+
+/** Lit une source : son flux RSS, ou ses dernières vidéos si c'est une chaîne YouTube. */
+export function readSource(source: Source) {
+  return source.youtube ? readYouTube(source.youtube) : readFeed(source.url);
+}
+
+/** La clé d'API YouTube manque : les chaînes sont ignorées, sans faire échouer le reste. */
+export class MissingKeyError extends UnavailableError {}
+
+type YouTubeItem = {
+  snippet?: { title?: string; description?: string; publishedAt?: string; thumbnails?: Record<string, { url?: string; width?: number }> };
+  contentDetails?: { videoId?: string; videoPublishedAt?: string };
+  status?: { privacyStatus?: string };
+};
+
+/**
+ * Dernières vidéos d'une chaîne YouTube, par l'API officielle (YouTube Data API v3, gratuite avec une clé).
+ * Le robots.txt de YouTube interdit aux robots son flux RSS (/feeds/videos.xml) : l'API est la voie autorisée.
+ * Une lecture coûte 1 unité sur les 10 000 offertes chaque jour par Google, soit environ 240 par jour ici.
+ * Le résultat a la même forme qu'un flux lu par rss-parser, pour que le robot le traite comme les autres.
+ */
+export async function readYouTube(channelId: string) {
+  const key = process.env.YOUTUBE_API_KEY?.trim();
+  if (!key) throw new MissingKeyError("clé YOUTUBE_API_KEY absente : chaîne ignorée");
+  // La liste « uploads » d'une chaîne a le même identifiant qu'elle, avec UU à la place de UC.
+  const params = new URLSearchParams({ part: "snippet,contentDetails,status", maxResults: "15", playlistId: `UU${channelId.slice(2)}`, key });
+  const res = await download(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`);
+  const data = JSON.parse(res.body.toString("utf8") || "{}") as { items?: YouTubeItem[]; error?: { message?: string } };
+  if (res.status >= 500) throw new UnavailableError(`erreur ${res.status} de l'API YouTube`);
+  if (res.status >= 300) throw new Error(`API YouTube ${res.status} : ${data.error?.message ?? "refus"}`);
+  return { items: youTubeItems(data.items ?? []) };
+}
+
+/**
+ * État actuel de vidéos déjà enregistrées (50 par appel, 1 unité chacun). Les règles de l'API YouTube
+ * demandent de rafraîchir ou supprimer ses données au bout de 30 jours : le robot s'en sert pour remettre
+ * à jour titre, texte et miniature, et retirer les vidéos supprimées ou devenues privées.
+ * Renvoie, pour chaque identifiant encore public, ses nouvelles données ; un identifiant absent a disparu.
+ */
+export async function currentVideos(ids: string[]) {
+  const key = process.env.YOUTUBE_API_KEY?.trim();
+  if (!key) throw new MissingKeyError("clé YOUTUBE_API_KEY absente");
+  const found = new Map<string, ReturnType<typeof youTubeItems>[number]>();
+  for (let i = 0; i < ids.length; i += 50) {
+    const batch = ids.slice(i, i + 50);
+    const params = new URLSearchParams({ part: "snippet,status", id: batch.join(","), maxResults: "50", key });
+    const res = await download(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+    const data = JSON.parse(res.body.toString("utf8") || "{}") as { items?: (YouTubeItem & { id?: string })[]; error?: { message?: string } };
+    if (res.status >= 300) throw new Error(`API YouTube ${res.status} : ${data.error?.message ?? "refus"}`);
+    // La réponse de videos.list n'a pas de contentDetails.videoId : on le reconstitue depuis id.
+    const items = youTubeItems((data.items ?? []).map((v) => ({ ...v, contentDetails: { videoId: v.id } })));
+    for (const item of items) found.set(new URL(item.link).searchParams.get("v")!, item);
+  }
+  return found;
+}
+
+/** Vidéos publiques de la réponse de l'API, au format d'un flux (titre, lien, date, résumé, miniature). */
+export function youTubeItems(items: YouTubeItem[]) {
+  return items
+    .filter((v) => v.contentDetails?.videoId && v.snippet?.title && (v.status?.privacyStatus ?? "public") === "public")
+    .map((v) => {
+      const thumbs = v.snippet!.thumbnails ?? {};
+      // maxres n'existe pas pour toutes les vidéos : la plus grande disponible.
+      const thumb = ["maxres", "standard", "high", "medium", "default"].map((k) => thumbs[k]?.url).find(Boolean);
+      return {
+        title: v.snippet!.title!,
+        link: `https://www.youtube.com/watch?v=${v.contentDetails!.videoId}`,
+        isoDate: v.contentDetails!.videoPublishedAt ?? v.snippet!.publishedAt,
+        pubDate: undefined as string | undefined,
+        content: undefined as string | undefined,
+        contentSnippet: videoText(v.snippet!.description ?? ""),
+        "content:encoded": undefined as string | undefined,
+        "content:encodedSnippet": undefined as string | undefined,
+        sourceEl: undefined,
+        mediaThumbnail: thumb ? [{ $: { url: thumb } }] : [],
+      };
+    });
+}
+
+/**
+ * Description d'une vidéo sans ce qui n'est pas de l'info : liens, mots-clés (#UFC), appels à s'abonner,
+ * réseaux sociaux de la chaîne, chapitres (« 02:15 Le combat »). Il reste en général les premières phrases.
+ */
+export function videoText(description: string) {
+  return description
+    .split(/\r?\n/)
+    .map((l) => l.replace(/https?:\/\/\S+/g, "").trim())
+    .filter((l) => l && !/^(#\S+\s*)+$/.test(l) && !/^\d{1,2}:\d{2}/.test(l))
+    .filter((l) => !/abonne|subscribe|retrouve[sz]?[- ](nous|-nous)|suivez[- ]nous|instagram|facebook|tiktok|twitter|newsletter|code promo|partenaire|sponsor/i.test(l))
+    .filter((l) => /[\p{L}]{3}/u.test(l))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Télécharge et lit un flux RSS ou Atom. */

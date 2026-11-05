@@ -235,6 +235,9 @@ main.container { padding-top: 24px; min-height: 70vh; }
 .article-photo { margin: 24px 0 0; }
 .article-photo img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 10px; background: var(--panel-2); }
 .article-photo figcaption { margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.article-video { margin: 24px 0 0; }
+.article-video iframe { display: block; width: 100%; aspect-ratio: 16/9; border: 0; background: #000; }
+.article-video .meta { margin-top: 8px; font-size: 13px; }
 .article .lead { font-size: 21px; line-height: 1.55; color: #e4e4e7; font-weight: 500; margin-top: 24px; }
 .source {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;

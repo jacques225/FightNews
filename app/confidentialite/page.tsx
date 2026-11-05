@@ -18,6 +18,22 @@ export default function PrivacyPage() {
         Les marques et contenus cités appartiennent à leurs propriétaires.
       </p>
 
+      <h2>Vidéos YouTube</h2>
+      <p>
+        FightNews utilise les services d'API de YouTube (YouTube API Services) pour lister les dernières vidéos de chaînes
+        françaises de sports de combat : titre, début de la description et miniature, avec un lien vers la vidéo. Ces données
+        sont remises à jour au moins chaque semaine, et retirées quand la vidéo est supprimée ou rendue privée.
+        L'API est appelée par notre robot, jamais avec tes données : FightNews ne te demande aucun accès à ton compte Google.
+      </p>
+      <p>
+        Sur la page d'une vidéo, le lecteur est fourni par YouTube depuis youtube-nocookie.com. En l'affichant ou en lançant
+        la vidéo, YouTube (Google) peut recevoir des informations techniques comme ton adresse IP et ton navigateur.
+        En regardant ces vidéos, tu acceptes les{" "}
+        <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">conditions d'utilisation de YouTube</a>.
+        Voir aussi les{" "}
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">règles de confidentialité de Google</a>.
+      </p>
+
       <h2>Newsletter et données personnelles</h2>
       <p>
         <strong>Données :</strong> ton adresse e-mail, les rubriques choisies et les dates d'inscription, de confirmation
@@ -32,7 +48,7 @@ export default function PrivacyPage() {
         au bout de 30 jours environ.
       </p>
       <p>
-        <strong>Prestataires :</strong> Supabase (base de données), Resend (envoi des e-mails), Vercel (hébergement du site).
+        <strong>Prestataires :</strong> Supabase (base de données), Resend (envoi des e-mails), Vercel (hébergement du site), YouTube (lecteur des vidéos).
       </p>
       <p>
         <strong>Tes droits :</strong> tu peux te désabonner à tout moment grâce au lien présent dans chaque e-mail, et

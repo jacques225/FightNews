@@ -160,6 +160,40 @@ Le nom est aussi utilisé pour sélectionner les articles sur le site : conserve
 N'ajouter `"official": true` que pour une fédération ou une organisation.
 Les flux anglophones ne sont plus importés : aucune traduction automatique n'est faite.
 
+### Réseaux sociaux : chaînes YouTube
+
+Le robot lit aussi les dernières vidéos de chaînes YouTube françaises (RMC Sport Combat, Hexagone MMA,
+Actu MMA, BoxeMag, L'Esprit du Judo). Chaque vidéo devient une brève : son titre, le début de sa
+description (sans liens, mots-clés ni appels à s'abonner), sa miniature, et sur la page de l'article
+le lecteur officiel YouTube avec le lien vers la vidéo.
+
+YouTube interdit aux robots son flux RSS (robots.txt : `Disallow: /feeds/videos.xml`) : les chaînes sont
+lues par l'**API YouTube Data v3**, gratuite. Il faut une clé, à créer une fois :
+
+1. Sur [console.cloud.google.com](https://console.cloud.google.com/), créer un projet (aucune carte bancaire demandée).
+2. « API et services » > « Bibliothèque » : activer **YouTube Data API v3**.
+3. « Identifiants » > « Créer des identifiants » > « Clé API ». La restreindre à « YouTube Data API v3 ».
+4. Sur GitHub : Settings > Secrets and variables > Actions > New repository secret, nom `YOUTUBE_API_KEY`.
+
+Règles de l'API YouTube respectées par le robot : les titres, textes et miniatures des vidéos sont rafraîchis
+au moins chaque semaine (colonne `refreshed_at`, ajoutée par `supabase/schema.sql`), une vidéo supprimée ou
+privée est retirée du site, et la page « Confidentialité » mentionne YouTube avec ses conditions d'utilisation.
+Point flou : les règles interdisent d'« agréger » les données de l'API de plusieurs propriétaires de chaînes.
+Elles visent surtout les statistiques, mais Google pourrait couper la clé ; le reste du robot continuerait.
+
+Le robot utilise environ 250 unités par jour sur les 10 000 offertes. Sans clé, les chaînes sont simplement
+ignorées (avertissement dans le journal) et les flux RSS continuent normalement.
+
+Pour ajouter une chaîne : son identifiant `UC…` (visible dans le code de la page de la chaîne, `"externalId"`).
+
+```json
+{ "name": "Chaîne (YouTube)", "url": "https://www.youtube.com/channel/UC…", "youtube": "UC…", "sport": "mma", "language": "fr" }
+```
+
+X, Instagram et TikTok ne sont pas branchés : leurs API sont payantes ou réservées, et les lire
+sans API enfreint leurs conditions d'utilisation. Bluesky est gratuit, mais aucun compte français
+de sports de combat n'y publie régulièrement (vérifié en novembre 2026).
+
 **Vérification** : `npm run sources:check`, ou tâche GitHub « Vérifier les sources ».
 Elle contrôle le flux, robots.txt, les dates et les photos, puis indique les sources inactives ou en erreur.
 Elle s'exécute également chaque lundi et lorsque la configuration des sources change.
