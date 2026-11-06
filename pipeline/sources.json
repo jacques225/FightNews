@@ -220,53 +220,5 @@
     "sport": "lifestyle",
     "official": true,
     "language": "en"
-  },
-  {
-    "name": "Venum (YouTube)",
-    "url": "https://www.youtube.com/channel/UCa8_YQ_7olxQwrHinBOA-UA",
-    "youtube": "UCa8_YQ_7olxQwrHinBOA-UA",
-    "sport": "lifestyle",
-    "official": true,
-    "language": "en"
-  },
-  {
-    "name": "Hayabusa (YouTube)",
-    "url": "https://www.youtube.com/channel/UCcg8_A1accymHbdr9JqQO4g",
-    "youtube": "UCcg8_A1accymHbdr9JqQO4g",
-    "sport": "lifestyle",
-    "official": true,
-    "language": "en"
-  },
-  {
-    "name": "RDX (YouTube)",
-    "url": "https://www.youtube.com/channel/UCAwyDcGs1gAcB-SbxAmCIEQ",
-    "youtube": "UCAwyDcGs1gAcB-SbxAmCIEQ",
-    "sport": "lifestyle",
-    "official": true,
-    "language": "en"
-  },
-  {
-    "name": "Fairtex (YouTube)",
-    "url": "https://www.youtube.com/channel/UC6po1m3rWU_0L_1GUITxeEA",
-    "youtube": "UC6po1m3rWU_0L_1GUITxeEA",
-    "sport": "lifestyle",
-    "official": true,
-    "language": "en"
-  },
-  {
-    "name": "Leone 1947 (YouTube)",
-    "url": "https://www.youtube.com/channel/UCY11VKNGB7SWf6VmT8SdT_w",
-    "youtube": "UCY11VKNGB7SWf6VmT8SdT_w",
-    "sport": "lifestyle",
-    "official": true,
-    "language": "en"
-  },
-  {
-    "name": "Metal Boxe (YouTube)",
-    "url": "https://www.youtube.com/channel/UC0CbLX-iNwf2BoZwqsfOyxQ",
-    "youtube": "UC0CbLX-iNwf2BoZwqsfOyxQ",
-    "sport": "lifestyle",
-    "official": true,
-    "language": "fr"
   }
 ]

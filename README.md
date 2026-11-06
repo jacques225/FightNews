@@ -218,7 +218,7 @@ sortes d'infos pour la rubrique Lifestyle (`pipeline/shops.ts`) :
   porte le pourcentage : la même promo n'est publiée qu'une fois.
 
 Le texte est écrit par le robot en français à partir des faits du catalogue. Au plus 2 infos par boutique et
-par passage, et 4 sur 24 h, nouveautés d'abord. Les chaînes YouTube des marques alimentent aussi la rubrique.
+par passage, et 4 sur 24 h, nouveautés d'abord.
 Pour ajouter une boutique Shopify : une entrée avec `"shop": { "brand": "…", "currency": "EUR" }` et
 `"url": "https://…/products.json"` (`"describe": true` reprend le début de la description si elle est en français).
 
