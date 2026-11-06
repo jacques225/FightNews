@@ -13,6 +13,7 @@ export type Source = {
   mixed?: boolean;     // média multisport : filtrage des sujets sans rapport
   official?: boolean;  // site officiel (fédération, organisation) : badge "Officiel" sur le site
   youtube?: string;    // chaîne YouTube (identifiant UC…) : lue par l'API YouTube, pas par un flux RSS
+  fullText?: boolean;  // le média a autorisé la reprise de ses articles en entier : texte complet du flux
 };
 
 export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr");

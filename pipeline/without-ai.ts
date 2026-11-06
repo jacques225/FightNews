@@ -4,7 +4,9 @@ import { escapeRe } from "./feeds";
 // Mode RSS français : le robot reprend le titre de la source
 // et un court extrait, avec le lien vers l'article complet. Rien n'est réécrit ni traduit.
 
-export const MAX_EXCERPT = 280; // un extrait, pas l'article : l'article complet reste chez son média
+// Un résumé, pas l'article : environ 4 à 6 phrases, l'article complet reste chez son média.
+// Les médias qui ont donné leur accord peuvent être repris en entier ("fullText": true dans sources.json).
+export const MAX_EXCERPT = 700;
 
 // Mentions ajoutées en fin de résumé par les blogs (WordPress surtout) : elles n'ont rien à faire dans l'extrait.
 const TRAILERS = [
@@ -66,4 +68,33 @@ export function isRepeat(bySport: Map<string, string[]>, title: string): boolean
 /** Les flux multisports ne doivent pas importer les sujets football, basket, etc. */
 export function isCombatNews(title: string, snippet: string): boolean {
   return /\b(mma|ufc|pfl|bellator|ares|boxe|boxing|kickboxing|muay|judo|grappling|jjb|bjj|adcc|lutte|jiu[ -]?jitsu|octogone)\b/i.test(`${title} ${snippet}`);
+}
+
+/**
+ * Texte complet d'un article à partir du HTML de son flux (content:encoded), en paragraphes séparés par
+ * une ligne vide. Réservé aux médias qui ont autorisé la reprise ("fullText": true dans sources.json).
+ * Retire photos, légendes, scripts, boutons de partage et la mention finale « L'article … est apparu en premier ».
+ */
+export function fullText(html: string | undefined): string {
+  if (!html) return "";
+  const clean = html.replace(/<(figure|figcaption|script|style|iframe|noscript|form|button)\b[\s\S]*?<\/\1>/gi, " ");
+  const blocks = clean
+    .split(/<\/?(?:p|div|h[1-6]|li|blockquote|br)\b[^>]*>/i)
+    .map((b) => decodeHtml(b.replace(/<[^>]*>/g, "")).replace(/\s+/g, " ").trim())
+    .filter((b) => b.length > 1);
+  let text = blocks.join("\n\n");
+  for (const re of TRAILERS) text = text.replace(re, "");
+  return text.trim().slice(0, 20000);
+}
+
+const HTML_ENTITIES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", hellip: "…",
+  rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", ndash: "–", mdash: "—", laquo: "«", raquo: "»",
+};
+function decodeHtml(s: string) {
+  return s.replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (m, e: string) => {
+    if (e[0] !== "#") return HTML_ENTITIES[e] ?? m;
+    const code = e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : Number(e.slice(1));
+    return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+  });
 }

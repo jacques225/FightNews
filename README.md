@@ -156,6 +156,12 @@ Pour ajouter un média francophone :
 { "name": "Média français", "url": "https://exemple.com/feed/", "sport": "mma", "language": "fr" }
 ```
 
+**Résumé et texte complet** : chaque info garde un résumé d'environ 700 caractères (4 à 6 phrases), tiré
+de la description que le média publie dans son flux, avec le lien vers l'article complet. Pour un média
+qui t'a donné son accord écrit, ajoute `"fullText": true` à sa source : le robot reprend alors l'article
+en entier depuis son flux (paragraphes, sans photos ni boutons), et la page affiche le texte complet.
+Garde une trace de l'accord (e-mail) : sans lui, la reprise intégrale est une contrefaçon.
+
 Le nom est aussi utilisé pour sélectionner les articles sur le site : conserver le même nom lors d'un changement d'URL.
 N'ajouter `"official": true` que pour une fédération ou une organisation.
 Les flux anglophones ne sont plus importés : aucune traduction automatique n'est faite.
@@ -163,7 +169,7 @@ Les flux anglophones ne sont plus importés : aucune traduction automatique n'es
 ### Réseaux sociaux : chaînes YouTube
 
 Le robot lit aussi les dernières vidéos de chaînes YouTube françaises (RMC Sport Combat, Hexagone MMA,
-Actu MMA, BoxeMag, L'Esprit du Judo). Chaque vidéo devient une brève : son titre, le début de sa
+Actu MMA, BoxeMag, L'Esprit du Judo, Muaythaikhaengtv). Chaque vidéo devient une brève : son titre, le début de sa
 description (sans liens, mots-clés ni appels à s'abonner), sa miniature, et sur la page de l'article
 le lecteur officiel YouTube avec le lien vers la vidéo.
 
