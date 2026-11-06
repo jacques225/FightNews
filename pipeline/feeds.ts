@@ -9,14 +9,17 @@ export type Source = {
   name: string;
   url: string;
   sport: string;       // rubrique du flux
-  language: "fr";     // seules les sources francophones sont actives
+  language: "fr" | "en"; // flux RSS : français uniquement ; vidéos YouTube : chaînes officielles en anglais admises
   mixed?: boolean;     // média multisport : filtrage des sujets sans rapport
   official?: boolean;  // site officiel (fédération, organisation) : badge "Officiel" sur le site
   youtube?: string;    // chaîne YouTube (identifiant UC…) : lue par l'API YouTube, pas par un flux RSS
   fullText?: boolean;  // le média a autorisé la reprise de ses articles en entier : texte complet du flux
 };
 
-export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr");
+// Pas de traduction automatique : les flux RSS doivent être en français. Une vidéo se comprend sans
+// traduction, donc les chaînes YouTube officielles en anglais sont admises pour les sports sans chaîne
+// française active (kick, muay thaï, grappling, lutte : choix de Jacques le 6 novembre 2026).
+export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr" || (s.youtube && s.language === "en"));
 
 export const MAX_NEW_PER_RUN = 25; // plafond par passage du robot, pour limiter le volume de chaque import
 

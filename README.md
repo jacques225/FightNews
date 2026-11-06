@@ -169,7 +169,8 @@ Les flux anglophones ne sont plus importés : aucune traduction automatique n'es
 ### Réseaux sociaux : chaînes YouTube
 
 Le robot lit aussi les dernières vidéos de chaînes YouTube françaises (RMC Sport Combat, Hexagone MMA,
-Actu MMA, BoxeMag, L'Esprit du Judo, Muaythaikhaengtv). Chaque vidéo devient une brève : son titre, le début de sa
+Actu MMA, BoxeMag, L'Esprit du Judo, Muaythaikhaengtv), et pour les sports sans chaîne française active, des
+chaînes officielles en anglais (GLORY, ONE Championship, FloGrappling, United World Wrestling). Chaque vidéo devient une brève : son titre, le début de sa
 description (sans liens, mots-clés ni appels à s'abonner), sa miniature, et sur la page de l'article
 le lecteur officiel YouTube avec le lien vers la vidéo.
 
