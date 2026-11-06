@@ -4,12 +4,17 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { animate, inView, stagger } from "motion";
 
-const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 /**
- * Animations d'entrée (bibliothèque Motion). Le contenu est visible par défaut : seules les sections
- * encore sous l'écran sont masquées puis révélées quand on y arrive. Sans JavaScript, ou pour qui
- * demande moins d'animations, rien ne bouge et tout reste lisible.
+ * Chorégraphie des animations (bibliothèque Motion, règles du skill Taste) :
+ * - un geste signature : la photo de la une s'ouvre comme un volet et se pose (échelle 1,12 → 1),
+ *   puis le titre monte ;
+ * - « À l'instant » arrive ligne par ligne ;
+ * - plus bas, chaque section arrive à son tour : titre, puis cartes dont la photo se pose ;
+ *   la rangée des combats glisse depuis la droite.
+ * Le contenu est visible par défaut : seules les sections encore sous l'écran sont masquées puis
+ * révélées une fois. Sans JavaScript, ou avec « réduire les animations », rien ne bouge.
  */
 export default function Reveal() {
   const path = usePathname();
@@ -18,27 +23,37 @@ export default function Reveal() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const stops: (() => void)[] = [];
 
-    // Signature : la photo de la une se dévoile de bas en haut, le titre suit.
     const lead = document.querySelector<HTMLElement>("[data-lead]");
     if (lead) {
-      const img = lead.querySelector(".card-img");
-      if (img) animate(img, { clipPath: ["inset(0 0 100% 0)", "inset(0 0 0% 0)"] }, { duration: 0.9, ease: EASE });
-      const text = lead.querySelectorAll(".card-body > *");
-      animate(text, { opacity: [0, 1], transform: ["translateY(18px)", "translateY(0)"] }, { duration: 0.7, ease: EASE, delay: stagger(0.08, { startDelay: 0.35 }) });
+      const frame = lead.querySelector<HTMLElement>(".card-img");
+      const img = frame?.querySelector("img");
+      if (frame) animate(frame, { clipPath: ["inset(0 0 100% 0)", "inset(0 0 0% 0)"] }, { duration: 1.1, ease: EXPO });
+      // Une fois posée, la photo rend la main au survol (CSS).
+      if (img) animate(img, { transform: ["scale(1.12)", "scale(1)"] }, { duration: 1.6, ease: EXPO }).then(() => { img.style.transform = ""; });
+      animate(lead.querySelectorAll(".card-body > *"), { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0)"] }, { duration: 0.9, ease: EXPO, delay: stagger(0.09, { startDelay: 0.45 }) });
     }
 
+    const rows = document.querySelectorAll(".latest-list li");
+    if (rows.length) animate(rows, { opacity: [0, 1], transform: ["translateX(-12px)", "translateX(0)"] }, { duration: 0.6, ease: EXPO, delay: stagger(0.06, { startDelay: 0.3 }) });
+
     document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((section) => {
-      const items = section.querySelectorAll<HTMLElement>("[data-reveal-item]");
-      const targets = items.length ? Array.from(items) : [section];
       // Déjà à l'écran au chargement : on ne cache rien.
-      if (section.getBoundingClientRect().top < window.innerHeight * 0.9) {
-        animate(targets, { opacity: [0, 1], transform: ["translateY(14px)", "translateY(0)"] }, { duration: 0.6, ease: EASE, delay: stagger(0.06, { startDelay: 0.2 }) });
-        return;
-      }
-      for (const t of targets) { t.style.opacity = "0"; t.style.transform = "translateY(28px)"; }
+      if (section.getBoundingClientRect().top < window.innerHeight * 0.85) return;
+      const sideways = section.classList.contains("upcoming");
+      const head = section.querySelector<HTMLElement>(".section-head, h2");
+      const items = Array.from(section.querySelectorAll<HTMLElement>("[data-reveal-item]"));
+      const pics = items.map((i) => i.querySelector<HTMLElement>(".card-img img")).filter(Boolean) as HTMLElement[];
+      const from = sideways ? "translateX(48px)" : "translateY(28px)";
+
+      const hidden = head ? [head, ...items] : items;
+      for (const t of hidden) { t.style.opacity = "0"; t.style.transform = from; }
+      for (const p of pics) p.style.transform = "scale(1.08)";
+
       stops.push(
         inView(section, () => {
-          animate(targets, { opacity: 1, transform: "translateY(0)" }, { duration: 0.7, ease: EASE, delay: stagger(0.07) });
+          if (head) animate(head, { opacity: 1, transform: "translate(0, 0)" }, { duration: 0.8, ease: EXPO });
+          animate(items, { opacity: 1, transform: "translate(0, 0)" }, { duration: 0.8, ease: EXPO, delay: stagger(0.08, { startDelay: 0.12 }) });
+          if (pics.length) animate(pics, { transform: "scale(1)" }, { duration: 1.3, ease: EXPO, delay: stagger(0.08, { startDelay: 0.12 }) }).then(() => pics.forEach((p) => { p.style.transform = ""; }));
         }, { amount: 0.15 }),
       );
     });
