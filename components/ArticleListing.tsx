@@ -16,10 +16,7 @@ export default async function ArticleListing({ sport: slug, page }: { sport?: st
     <>
       <div className="page-head" style={{ ["--c" as string]: sport?.color ?? "#d21f2c" }}>
         <h1>{sport ? sport.name : "Toute l'actu"}</h1>
-        <p>
-          {sport ? sport.description : "Toutes les rubriques, de la plus récente à la plus ancienne."}
-          {page > 1 && ` · Page ${page}`}
-        </p>
+        {page > 1 && <p>Page {page}</p>}
       </div>
       {articles.length ? (
         <div className="grid grid-3" data-reveal>
