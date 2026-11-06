@@ -17,6 +17,9 @@ export default function NavLinks() {
       <Link href="/calendrier" className="nav-all" aria-current={isActive("/calendrier") ? "page" : undefined}>
         Calendrier
       </Link>
+      <Link href="/competitions" className="nav-all" aria-current={isActive("/competitions") ? "page" : undefined}>
+        Compétitions
+      </Link>
       {SPORTS.map((s) => (
         <Link
           key={s.slug}
