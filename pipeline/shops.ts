@@ -24,16 +24,24 @@ const NEW_PRODUCT_DAYS = 60;
 // En dessous de -15 %, ce n'est pas une info.
 const MIN_DISCOUNT = 15;
 
+// Shopify renvoie 250 produits au plus par page : jusqu'à 4 pages (1 000 produits) par boutique.
+const MAX_PAGES = 4;
+
 /** Catalogue d'une boutique, au format d'un flux lu par rss-parser pour que le robot le traite comme les autres. */
 export async function readShop(source: Source) {
-  const res = await download(`${source.url}?limit=250`);
-  if (res.status >= 500) throw new UnavailableError(`erreur ${res.status} du serveur de la boutique`);
-  if (res.status >= 300) throw new Error(`Status code ${res.status}`);
-  let products: ShopProduct[];
-  try {
-    products = (JSON.parse(res.body.toString("utf8")) as { products?: ShopProduct[] }).products ?? [];
-  } catch {
-    throw new Error("catalogue illisible (pas du JSON)");
+  const products: ShopProduct[] = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const res = await download(`${source.url}?limit=250&page=${page}`);
+    if (res.status >= 500) throw new UnavailableError(`erreur ${res.status} du serveur de la boutique`);
+    if (res.status >= 300) throw new Error(`Status code ${res.status}`);
+    let batch: ShopProduct[];
+    try {
+      batch = (JSON.parse(res.body.toString("utf8")) as { products?: ShopProduct[] }).products ?? [];
+    } catch {
+      throw new Error("catalogue illisible (pas du JSON)");
+    }
+    products.push(...batch);
+    if (batch.length < 250) break;
   }
   return { items: shopItems(products, source.url.replace(/\/products\.json$/, ""), source.shop!) };
 }
