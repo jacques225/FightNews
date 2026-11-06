@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cityCase, frenchDate, kindOf, parseFFKarate, parseFFKMDA, parseSmoothcomp, placeName, postcodeCity, tidyTitle } from "../lib/competitions";
+import { cityCase, frenchDate, frenchDates, kindOf, parseFFKarate, parseFFKMDA, parseSmoothcomp, placeName, postcodeCity, tidyTitle } from "../lib/competitions";
 
 test("Smoothcomp : lit la liste embarquée dans la page", () => {
   const html = `<script>var events = [{"id":32459,"title":"Grappling Industries PARIS","url":"https:\\/\\/grapplingindustries.smoothcomp.com\\/en\\/event\\/32459","eventEnded":false,"location_country":"FR","location_city":"Paris","categoryGroups":["1","7","3"],"startdate":"2026-11-08","enddate":"2026-11-08","note":"a ] b"},{"id":1,"title":"Old","url":"x","eventEnded":true,"startdate":"2026-01-01","enddate":"2026-01-01"}];
@@ -43,6 +43,9 @@ test("FFKMDA : date et ville écrites dans le texte", () => {
 test("petits utilitaires", () => {
   assert.equal(frenchDate("le 1er février 2027 à 18h"), "2027-02-01");
   assert.equal(frenchDate("rien"), "");
+  assert.deepEqual(frenchDates("les 21 et 22 novembre 2026"), ["2026-11-21", "2026-11-22"]);
+  assert.deepEqual(frenchDates("du 1er au 3 mai 2027"), ["2027-05-01", "2027-05-03"]);
+  assert.deepEqual(frenchDates("samedi 7 novembre 2026"), ["2026-11-07", "2026-11-07"]);
   assert.equal(postcodeCity("Salle, 75011 Paris, France"), "Paris");
   assert.equal(placeName("Palais des sports - Béziers (34)"), "Béziers (34)");
   assert.equal(placeName("-- En attente de confirmation de la salle --"), "");

@@ -234,13 +234,26 @@ const FFKMDA_KIND: Record<string, string> = {
   "calendrier-international": "International",
 };
 
-/** Première date écrite en toutes lettres dans le texte (« samedi 7 novembre 2026 », « le 1er mars 2027 »). */
-export function frenchDate(text: string): string {
-  const m = text.toLowerCase().match(new RegExp(`\\b(\\d{1,2})(?:er)?\\s+(${MONTHS.join("|")}|fevrier|aout|decembre)\\s+(20\\d{2})`));
-  if (!m) return "";
-  const month = MONTHS.findIndex((x) => x.normalize("NFD").replace(/\p{M}/gu, "") === m[2].normalize("NFD").replace(/\p{M}/gu, "")) + 1;
-  return `${m[3]}-${String(month).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+/**
+ * Dates écrites en toutes lettres dans le texte (« samedi 7 novembre 2026 », « le 1er mars 2027 »,
+ * « les 21 et 22 novembre 2026 », « du 21 au 23 novembre 2026 »). Renvoie [début, fin], vides si rien n'est trouvé.
+ */
+export function frenchDates(text: string): [string, string] {
+  const months = `${MONTHS.join("|")}|fevrier|aout|decembre`;
+  const m = text.toLowerCase().match(
+    new RegExp(`\\b(?:(\\d{1,2})(?:er)?\\s+(?:et|au|-|–)\\s+)?(\\d{1,2})(?:er)?\\s+(${months})\\s+(20\\d{2})`),
+  );
+  if (!m) return ["", ""];
+  const plain = (x: string) => x.normalize("NFD").replace(/\p{M}/gu, "");
+  const month = String(MONTHS.findIndex((x) => plain(x) === plain(m[3])) + 1).padStart(2, "0");
+  const day = (d: string) => `${m[4]}-${month}-${d.padStart(2, "0")}`;
+  const end = day(m[2]);
+  const start = m[1] && Number(m[1]) < Number(m[2]) ? day(m[1]) : end;
+  return [start, end];
 }
+
+/** Première date (ou premier jour d'une période) écrite en toutes lettres dans le texte. */
+export const frenchDate = (text: string) => frenchDates(text)[0];
 
 /** Ville : le code postal suivi du nom (« 80700 Roye »). */
 export function postcodeCity(text: string): string {
@@ -253,8 +266,8 @@ export function parseFFKMDA(posts: WpEvent[], today: string): Competition[] {
   for (const p of posts) {
     const text = decode(p.content.rendered);
     const title = tidyTitle(decode(p.title.rendered));
-    const start = frenchDate(text);
-    if (!start || start < today) continue;
+    const [start, end] = frenchDates(text);
+    if (!start || end < today) continue;
     const classes = p.class_list ?? [];
     const disc = classes.filter((c) => c.startsWith("event_discipline-")).map((c) => FFKMDA_DISCIPLINE[c.slice(17)]).filter(Boolean);
     const cat = classes.find((c) => c.startsWith("event_category-"))?.slice(15) ?? "";
@@ -262,7 +275,7 @@ export function parseFFKMDA(posts: WpEvent[], today: string): Competition[] {
       id: `ffkmda-${p.id}`,
       title,
       start,
-      end: start,
+      end,
       city: postcodeCity(text),
       disciplines: disc.length ? [...new Set(disc.map((d) => d[0]))] : ["Pieds-poings"],
       sport: disc[0]?.[1] ?? "kickboxing",
