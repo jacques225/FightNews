@@ -29,12 +29,9 @@ export default async function Home() {
           <h1 id="front-title" className="sr-only">FightNews, l'actu de tous les sports de combat</h1>
           <ArticleCard article={hero} large />
           <div className="latest">
-            <h2 className="latest-title">
-              <span className="live-dot" aria-hidden="true" />
-              À l'instant
-            </h2>
+            <h2 className="latest-title">À l'instant</h2>
             <ul className="latest-list">
-              {rest.slice(0, 6).map((a) => <LatestItem key={a.id} article={a} />)}
+              {rest.slice(0, 7).map((a) => <LatestItem key={a.id} article={a} />)}
             </ul>
             <Link href="/actus" className="text-link">
               Toute l'actu <Arrow />
@@ -107,7 +104,7 @@ function NewsletterBand() {
 function UpcomingBlock({ events }: { events: FightEvent[] }) {
   if (!events.length) return null;
   return (
-    <section className="section upcoming" data-reveal>
+    <section className="section upcoming bleed" data-reveal>
       <div className="section-head">
         <h2>Prochains combats</h2>
         <Link href="/calendrier" className="text-link">Tout le calendrier <Arrow /></Link>
