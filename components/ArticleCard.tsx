@@ -25,7 +25,7 @@ export default function ArticleCard({ article, large = false, variant }: { artic
       </div>
       <div className="card-body">
         {v === "large" ? <h2 className="card-title">{displayTitle(article.title)}</h2> : <h3 className="card-title">{displayTitle(article.title)}</h3>}
-        {(v === "large" || v === "feature") && article.summary && <p className="card-excerpt">{article.summary}</p>}
+        
         <p className="meta">
           <span className="meta-sport">{sport?.short}</span>
           <time dateTime={article.published_at}>{timeAgo(article.published_at)}</time>

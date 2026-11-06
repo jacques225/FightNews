@@ -25,8 +25,8 @@ export default async function CalendarPage() {
   return (
     <>
       <div className="page-head">
-        <h1>Les prochains combats</h1>
-        <p>Les galas annoncés par l'UFC, le PFL, ONE, le KSW, Oktagon, Cage Warriors, le Rizin, Brave CF et Glory, avec leur carte, mis à jour plusieurs fois par jour.</p>
+        <h1>Calendrier</h1>
+        <p>Les prochains galas et leur carte.</p>
       </div>
 
       {events.length ? (

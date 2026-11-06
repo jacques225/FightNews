@@ -35,8 +35,8 @@
   --step-small: 0.8125rem;
   --step-body: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
   --step-lead: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  --step-head: clamp(2.75rem, 1.4rem + 5vw, 6.5rem);
-  --step-display: clamp(4rem, 1rem + 12vw, 12rem);
+  --step-head: clamp(1.75rem, 1.35rem + 1.4vw, 2.5rem);
+  --step-display: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
   --masthead: 68px;
 }
 
@@ -75,7 +75,7 @@ a:hover .arrow { transform: translateX(4px); }
 /* ── En-tête ──────────────────────────────────────────────── */
 .header { position: sticky; top: calc(-1 * var(--masthead)); z-index: 20; background: var(--bg); box-shadow: 0 1px 0 var(--paper-2); }
 .masthead { display: flex; align-items: center; gap: 24px; height: var(--masthead); }
-.logo { margin: 0; font-size: 38px; letter-spacing: -0.01em; line-height: 1; white-space: nowrap; }
+.logo { margin: 0; font-size: 32px; letter-spacing: -0.01em; line-height: 1; white-space: nowrap; }
 .logo span { color: var(--red); }
 .masthead-tagline { margin: 0; color: var(--muted); font-size: 14px; }
 .nav-cta {
@@ -105,6 +105,8 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .meta > * + *::before { content: "·"; margin: 0 6px; }
 .meta-sport { color: var(--c); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
 .official { color: var(--ok); font-weight: 600; }
+/* Dans les listes, on garde la méta courte : rubrique, heure, média */
+.card .official, .latest-list .official { display: none; }
 
 /* ── Cartes ───────────────────────────────────────────────── */
 .card { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -113,14 +115,14 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .card:hover .card-img img { transform: scale(1.03); filter: none; }
 .card-fallback {
   position: absolute; left: 12px; bottom: 6px; letter-spacing: 0; line-height: .9;
-  font-size: clamp(44px, 6vw, 88px); color: var(--c);
+  font-size: clamp(32px, 3vw, 48px); color: var(--c);
 }
 /* Sans photo du média : une vignette FightNews noire au nom de la rubrique */
 .card-img:not(:has(img)) { background: var(--paper); }
 .card-img:has(img) .card-fallback { color: transparent; }
 .card-body { display: flex; flex-direction: column; gap: 8px; }
 .card-title {
-  font-size: 24px; line-height: 1; letter-spacing: .005em;
+  font-size: 20px; line-height: 1.05; letter-spacing: .01em;
   transition: color var(--t-hover);
 }
 .card:hover .card-title { color: var(--red); }
@@ -130,24 +132,24 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .card-large { gap: 0; color: var(--on-band); background: var(--paper); box-shadow: inset 4px 0 0 var(--red); }
 .card-large .card-img { aspect-ratio: 16 / 9; }
 .card-large .card-body { padding: 28px 32px 32px 36px; gap: 14px; }
-.card-large .card-title { font-size: clamp(38px, 3.8vw, 60px); line-height: .9; letter-spacing: 0; max-width: 22ch; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.card-large .card-title { font-size: clamp(28px, 2.4vw, 40px); line-height: .95; letter-spacing: 0; max-width: 22ch; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .card-large:hover .card-title { color: var(--ink); }
 .card-large .card-excerpt { color: var(--ink-2); max-width: 56ch; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card-large .meta { color: var(--muted); }
-.card-large .card-fallback { font-size: clamp(120px, 18vw, 280px); }
+.card-large .card-fallback { font-size: clamp(64px, 8vw, 120px); }
 .card-large .card-img img { inset: -7% 0; height: 114%; will-change: transform, translate; }
 
 /* Carte compacte : vignette carrée à droite */
 .card-compact { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 16px; align-items: start; }
 .card-compact .card-img { grid-column: 2; grid-row: 1; aspect-ratio: 1; }
 .card-compact .card-body { grid-column: 1; grid-row: 1; }
-.card-compact .card-title { font-size: 21px; }
+.card-compact .card-title { font-size: 18px; }
 .card-compact .card-fallback { font-size: 30px; left: 8px; }
 
 /* ── Ouverture ────────────────────────────────────────────── */
-.front { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); gap: 40px; align-items: stretch; margin-bottom: 96px; }
+.front { display: grid; grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); gap: 40px; align-items: start; margin-bottom: 96px; }
 .latest { display: flex; flex-direction: column; }
-.latest-title { display: flex; align-items: center; gap: 10px; font-size: 30px; letter-spacing: .01em; padding-bottom: 12px; box-shadow: inset 0 -3px 0 var(--red); margin-bottom: 4px; }
+.latest-title { display: flex; align-items: center; gap: 10px; font-size: 22px; letter-spacing: .01em; padding-bottom: 12px; box-shadow: inset 0 -3px 0 var(--red); margin-bottom: 4px; }
 .latest-list { list-style: none; margin: 0 0 16px; padding: 0; flex: 1; }
 .latest-list li + li { border-top: 1px solid var(--paper-2); }
 .latest-list a { display: flex; flex-direction: column; gap: 6px; padding: 15px 0; }
@@ -158,16 +160,16 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .latest-list a:hover .latest-headline { color: var(--red); }
 
 /* ── Sections ─────────────────────────────────────────────── */
-.section { margin-bottom: 136px; }
+.section { margin-bottom: 96px; }
 .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 36px; padding-top: 20px; box-shadow: inset 0 1px 0 var(--paper-2); position: relative; }
-.section-head::before { content: ""; position: absolute; left: 0; top: -1px; width: 96px; height: 4px; background: var(--c, var(--red)); }
-.section-head h2 { font-size: var(--step-head); line-height: .82; letter-spacing: -0.005em; margin-left: -0.02em; }
+.section-head::before { content: ""; position: absolute; left: 0; top: -1px; width: 48px; height: 3px; background: var(--c, var(--red)); }
+.section-head h2 { font-size: var(--step-head); line-height: .9; letter-spacing: -0.005em; margin-left: -0.02em; }
 .section-head h2 a:hover { color: var(--red); }
 .grid { display: grid; gap: 44px 28px; }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .sport-split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px; align-items: start; }
-.sport-split > .card .card-title, .sport-solo .card-title { font-size: clamp(32px, 3vw, 48px); line-height: .92; }
+.sport-split > .card .card-title, .sport-solo .card-title { font-size: clamp(22px, 1.8vw, 28px); line-height: 1; }
 .sport-list { display: grid; gap: 28px; }
 .card-feature .card-excerpt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .sport-solo .card { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 40px; align-items: center; }
@@ -180,9 +182,9 @@ main.container { padding-top: 32px; min-height: 70vh; }
 /* Newsletter : un aplat gris papier */
 .nl-band {
   display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 56px; align-items: end;
-  margin: 0 0 136px; padding: 64px 56px; background: var(--red); color: var(--on-red);
+  margin: 0 0 96px; padding: 48px 56px; background: var(--red); color: var(--on-red);
 }
-.nl-band h2 { font-size: clamp(44px, 5vw, 84px); line-height: .86; letter-spacing: 0; margin-bottom: 16px; max-width: 14ch; }
+.nl-band h2 { font-size: clamp(30px, 2.6vw, 42px); line-height: .95; letter-spacing: 0; margin-bottom: 16px; max-width: 14ch; }
 .nl-band p { margin: 0; color: rgba(255,255,255,.88); font-size: var(--step-body); max-width: 46ch; }
 
 .lifestyle-block { background: var(--paper); padding: 48px; }
@@ -233,15 +235,15 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .chip:has(input:checked) { background: var(--ink); color: var(--bg); }
 .chip:has(input:focus-visible) { outline: 2px solid var(--red); outline-offset: 2px; }
 .nl-page { max-width: 720px; margin: 24px auto 0; }
-.nl-page h1 { font-size: clamp(56px, 8vw, 120px); line-height: .85; letter-spacing: 0; margin-bottom: 20px; }
+.nl-page h1 { font-size: var(--step-display); line-height: .95; letter-spacing: 0; margin-bottom: 20px; }
 .nl-page .lead { color: var(--ink-2); font-size: var(--step-lead); line-height: 1.4; margin: 0 0 32px; max-width: 40ch; }
 .nl-page form + .nl-legal { margin-top: 16px; }
 
 /* ── Têtes de rubrique, d'archives, du calendrier ─────────── */
-.page-head { padding: 24px 0 48px; }
-.page-head h1 { font-size: var(--step-display); line-height: .8; letter-spacing: -0.01em; margin-left: -0.03em; }
-.page-head h1::after { content: ""; display: block; width: 120px; height: 6px; margin-top: 28px; background: var(--red); }
-.page-head p { margin: 24px 0 0; max-width: 56ch; font-size: var(--step-lead); line-height: 1.35; color: var(--ink-2); }
+.page-head { padding: 24px 0 36px; }
+.page-head h1 { font-size: var(--step-display); line-height: .95; letter-spacing: .005em; }
+.page-head h1::after { content: ""; display: block; width: 48px; height: 3px; margin-top: 16px; background: var(--red); }
+.page-head p { margin: 16px 0 0; max-width: 56ch; font-size: var(--step-body); line-height: 1.35; color: var(--ink-2); }
 .empty { color: var(--ink-2); padding: 40px 0; }
 .empty a { color: var(--ink); text-decoration: underline; }
 
@@ -256,7 +258,7 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .article { max-width: 840px; margin: 8px auto 0; }
 .article-sport { display: inline-block; color: var(--red); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
 .article-sport:hover { text-decoration: underline; text-underline-offset: 0.18em; }
-.article h1 { font-size: clamp(48px, 6.4vw, 96px); line-height: .86; letter-spacing: 0; margin: 14px 0 22px -0.02em; }
+.article h1 { font-size: clamp(32px, 3.4vw, 50px); line-height: .98; letter-spacing: 0; margin: 14px 0 22px -0.02em; }
 .article > .meta { font-size: 14px; }
 .article-photo { margin: 32px 0 0; }
 .article-photo img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--paper); filter: brightness(.92) contrast(1.04); }
@@ -272,24 +274,24 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .tags { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
 .tags span { padding: 4px 12px; text-transform: uppercase; letter-spacing: .06em; font-size: 12px !important; background: var(--paper); color: var(--ink-2); font-size: 14px; }
 .related { margin-top: 112px; }
-.related .section-head h2 { font-size: clamp(40px, 4vw, 64px); }
+.related .section-head h2 { font-size: clamp(24px, 2vw, 32px); }
 .legal h1 { font-size: clamp(36px, 5vw, 60px); }
-.legal h2 { font-size: 32px; letter-spacing: 0; margin: 40px 0 8px; }
+.legal h2 { font-size: 24px; letter-spacing: 0; margin: 40px 0 8px; }
 .legal p { font-size: 17px !important; }
 
 /* ── Calendrier ───────────────────────────────────────────── */
 .cal-month { margin-bottom: 64px; }
-.cal-month-title { margin: 0 0 20px; font-size: 48px; letter-spacing: 0; line-height: .9; }
+.cal-month-title { margin: 0 0 20px; font-size: 28px; letter-spacing: 0; line-height: .9; }
 .cal-month-title::first-letter { text-transform: uppercase; }
 .cal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .cal-event { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 14px 28px; padding: 24px; background: var(--paper); scroll-margin-top: 70px; }
 .cal-event:target { outline: 2px solid var(--red); }
 .cal-date { display: flex; flex-direction: column; align-items: center; justify-content: center; align-self: start; min-height: 88px; background: var(--red); color: #fff; line-height: 1; }
 .cal-date span { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
-.cal-date b { font-size: 44px; letter-spacing: 0; margin: 4px 0 3px; }
+.cal-date b { font-size: 34px; letter-spacing: 0; margin: 4px 0 3px; }
 .cal-body { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 .cal-org { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--red); }
-.cal-body h3, .cal-name { font-size: 36px; line-height: .9; letter-spacing: 0; }
+.cal-body h3, .cal-name { font-size: 26px; line-height: .95; letter-spacing: 0; }
 .cal-headline, .cal-fighters { margin: 0; }
 .cal-headline { font-size: 17px; font-weight: 600; line-height: 1.35; }
 .cal-headline i, .cal-fighters i { font-style: normal; color: var(--muted); font-weight: 400; margin: 0 2px; }
@@ -329,7 +331,7 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .cal-strip .cal-date b { font-size: 30px; }
 .cal-strip .cal-body { gap: 4px; }
 .cal-strip .cal-org { color: #ff5a50; }
-.cal-strip .cal-name { font-size: 30px; }
+.cal-strip .cal-name { font-size: 22px; }
 .cal-strip .cal-headline { font-size: 14px; font-weight: 500; color: var(--on-band-2); }
 .cal-strip .cal-headline i { color: #777; }
 .cal-strip .cal-title { margin-left: 6px; }
@@ -338,11 +340,11 @@ main.container { padding-top: 32px; min-height: 70vh; }
 /* ── Pied de page ─────────────────────────────────────────── */
 .footer { margin-top: 136px; padding: 80px 0 64px; background: var(--band); color: var(--ink-2); font-size: 15px; box-shadow: inset 0 4px 0 var(--red); }
 .footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: start; }
-.footer .logo { font-size: 72px; color: var(--ink); margin-bottom: 16px; }
+.footer .logo { font-size: 40px; color: var(--ink); margin-bottom: 16px; }
 .footer p { max-width: 52ch; }
 .footer a { color: var(--ink); text-decoration: underline; text-underline-offset: 0.18em; text-decoration-color: #4a4a4a; }
 .footer a:hover { text-decoration-color: var(--red); }
-.footer-title { color: var(--ink); font-size: 40px; line-height: .9; letter-spacing: 0; margin: 0 0 16px; }
+.footer-title { color: var(--ink); font-size: 26px; line-height: .95; letter-spacing: 0; margin: 0 0 16px; }
 
 /* ── Tablette ─────────────────────────────────────────────── */
 @media (max-width: 1080px) {
@@ -357,7 +359,7 @@ main.container { padding-top: 32px; min-height: 70vh; }
   :root { --masthead: 56px; }
   .container { padding: 0 16px; }
   main.container { padding-top: 0; }
-  .logo { font-size: 32px; }
+  .logo { font-size: 28px; }
   .nav-cta { padding: 8px 12px; }
   .nav-cta span { display: none; }
   .nav { margin: 0 -16px; padding: 0 4px; }
@@ -367,7 +369,7 @@ main.container { padding-top: 32px; min-height: 70vh; }
   .front { margin-bottom: 72px; gap: 32px; }
   .front > .card-large { margin: 0 -16px; }
   .card-large .card-body { padding: 20px 16px 24px; gap: 10px; }
-  .card-large .card-title { font-size: 44px; }
+  .card-large .card-title { font-size: 28px; }
   .section { margin-bottom: 80px; }
   .section-head { margin-bottom: 22px; }
   .sport-split, .grid-3, .grid-4, .sport-solo .card { grid-template-columns: minmax(0, 1fr); gap: 24px; }
@@ -376,7 +378,7 @@ main.container { padding-top: 32px; min-height: 70vh; }
   .grid-3 .card, .grid-4 .card, .sport-list .card { display: grid; grid-template-columns: minmax(0, 1fr) 104px; gap: 14px; }
   .grid-3 .card-img, .grid-4 .card-img, .sport-list .card-img { grid-column: 2; grid-row: 1; aspect-ratio: 1; }
   .grid-3 .card-body, .grid-4 .card-body, .sport-list .card-body { grid-column: 1; grid-row: 1; }
-  .grid-3 .card-title, .grid-4 .card-title, .sport-list .card-title { font-size: 22px; }
+  .grid-3 .card-title, .grid-4 .card-title, .sport-list .card-title { font-size: 18px; }
   .grid-3 .card-fallback, .grid-4 .card-fallback { font-size: 28px; left: 8px; }
   .upcoming { padding-top: 48px; padding-bottom: 56px; }
   .cal-strip { grid-auto-columns: 84%; margin: 0 -16px; padding: 0 16px 8px; scroll-padding: 0 16px; }
@@ -391,8 +393,8 @@ main.container { padding-top: 32px; min-height: 70vh; }
   .cal-event { grid-template-columns: 64px minmax(0, 1fr); gap: 12px 16px; padding: 16px; }
   .cal-card, .cal-pending { grid-column: 1 / -1; }
   .cal-date { min-height: 72px; }
-  .cal-date b { font-size: 34px; }
-  .cal-body h3 { font-size: 30px; }
+  .cal-date b { font-size: 28px; }
+  .cal-body h3 { font-size: 22px; }
   .cal-bout { grid-template-columns: minmax(0, 1fr); }
   .footer { margin-top: 80px; padding: 48px 0; }
   .footer-inner { grid-template-columns: minmax(0, 1fr); gap: 40px; }
