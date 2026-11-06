@@ -15,7 +15,8 @@ import { robotsForbids } from "./robots";
 // Balises lues, de la plus précise à la plus générale.
 const KEYS = ["og:image:secure_url", "og:image:url", "og:image", "twitter:image", "twitter:image:src"];
 // Images génériques qu'un site met quand l'article n'a pas de photo : logo, image par défaut, têtière du site.
-const GENERIC = /logo|favicon|default|placeholder|share-image|social-share|t[eé]ti[eè]re|banni[eè]re/i;
+// Les « bannières » restent acceptées : la FFBoxe en crée une par article (ex. Banniere-FFBoxe-7.png).
+const GENERIC = /logo|favicon|default|placeholder|share-image|social-share|t[eé]ti[eè]re/i;
 
 /** Adresse de la photo d'aperçu trouvée dans le HTML d'une page, ou rien. Fonction pure, testable. */
 export function previewImageOf(html: string, pageUrl: string): string | undefined {

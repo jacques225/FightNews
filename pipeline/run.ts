@@ -1,7 +1,7 @@
 /** Flux RSS français → titre, court extrait, photo et source → Supabase. Aucun appel à une IA. */
 import { createClient } from "@supabase/supabase-js";
 import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readSource, snippetOf, MissingKeyError, currentVideos, imageOf, type Source } from "./feeds";
-import { excerpt, isRepeat, sportOf, isCombatNews } from "./without-ai";
+import { excerpt, fullText, isRepeat, sportOf, isCombatNews } from "./without-ai";
 import { previewImage } from "./preview";
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -11,7 +11,7 @@ const PREVIEWS_PER_RUN = 20;
 // image_url vaut "" quand la page de l'article a été lue sans y trouver de photo : on ne la relit pas.
 const NO_PREVIEW = "";
 
-type Item = { title: string; link: string; snippet: string; image?: string; date: string; publisher: string; source: Source };
+type Item = { title: string; link: string; snippet: string; full?: string; image?: string; date: string; publisher: string; source: Source };
 
 const supabase =
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -31,7 +31,8 @@ async function fetchAll(): Promise<Item[]> {
         if (Date.now() - new Date(date).getTime() > MAX_AGE_HOURS * 3600_000) continue;
         const { publisher, title } = publisherOf(it.sourceEl, it.title, source.name);
         const snippet = snippetOf(it.content, it.contentSnippet, it["content:encoded"], it["content:encodedSnippet"]).slice(0, 1500);
-        items.push({ title, link: it.link, snippet, image: imageOf(it), date, publisher, source });
+        const full = source.fullText ? fullText(it["content:encoded"] ?? it.content) : undefined;
+        items.push({ title, link: it.link, snippet, full, image: imageOf(it), date, publisher, source });
       }
       console.log(`✓ ${source.name} : ${feed.items.length} entrées`);
     } catch (e) {
@@ -143,27 +144,32 @@ async function refreshVideos() {
   console.log(`${data.length} vidéos YouTube rafraîchies, dont ${gone} retirées (supprimées ou privées)`);
 }
 
-/** Complète les imports dont le flux plaçait l'extrait dans content:encoded. */
+/**
+ * Complète ou allonge le résumé des infos déjà enregistrées encore présentes dans les flux : extrait vide
+ * (flux qui le plaçait dans content:encoded) ou plus court que ce que donne la règle actuelle (résumés de
+ * 280 caractères d'avant). Ajoute aussi le texte complet des médias qui l'ont autorisé.
+ */
 async function addMissingExcerpts(items: Item[]) {
   if (!supabase || DRY_RUN) return;
   let added = 0;
   for (let i = 0; i < items.length; i += 200) {
     const batch = items.slice(i, i + 200);
-    const { data, error } = await supabase.from("articles").select("id,source_url,title")
-      .eq("summary", "").eq("body", "").in("status", ["draft", "published"])
-      .in("source_url", batch.map((item) => item.link));
+    const { data, error } = await supabase.from("articles").select("id,source_url,title,summary,body")
+      .in("status", ["draft", "published"]).in("source_url", batch.map((item) => item.link));
     if (error) throw error;
     for (const row of data) {
       const item = batch.find((item) => item.link === row.source_url)!;
       const summary = excerpt(item.snippet, row.title);
-      if (!summary) continue;
-      const { data: saved, error } = await supabase.from("articles").update({ summary })
-        .eq("id", row.id).eq("summary", "").eq("body", "").in("status", ["draft", "published"]).select("id");
+      const update: { summary?: string; body?: string } = {};
+      if (summary.length > (row.summary ?? "").length) update.summary = summary;
+      if (item.full && !row.body) update.body = item.full;
+      if (!Object.keys(update).length) continue;
+      const { data: saved, error } = await supabase.from("articles").update(update).eq("id", row.id).select("id");
       if (error) throw error;
       added += saved.length;
     }
   }
-  console.log(`${added} extraits manquants complétés`);
+  console.log(`${added} résumés complétés ou allongés`);
 }
 
 /** Titres publiés ou en brouillon ces dernières 48 h, par rubrique : sert à repérer les doublons. */
@@ -253,7 +259,7 @@ async function main() {
     const preview = item.image ? undefined : await tryPreview(item.link);
     const image = item.image ?? (preview === undefined ? null : preview ?? NO_PREVIEW);
     const title = item.title.trim().slice(0, 300);
-    const content = { title, summary: excerpt(item.snippet, title), body: "", sport: sportOf(title, item.source.sport), tags: [] };
+    const content = { title, summary: excerpt(item.snippet, title), body: item.full ?? "", sport: sportOf(title, item.source.sport), tags: [] };
     const row = {
       slug: `${slugify(content.title)}-${Date.now().toString(36)}`,
       ...content,

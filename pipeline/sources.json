@@ -124,5 +124,43 @@
     "youtube": "UCKJnGYMsdmHbHhWwWx_Bgew",
     "sport": "judo",
     "language": "fr"
+  },
+  {
+    "name": "Muaythaikhaengtv (YouTube)",
+    "url": "https://www.youtube.com/channel/UC8AZ-unPGQUqLTLMYSI5oyw",
+    "youtube": "UC8AZ-unPGQUqLTLMYSI5oyw",
+    "sport": "muay-thai",
+    "language": "fr"
+  },
+  {
+    "name": "GLORY Kickboxing (YouTube)",
+    "url": "https://www.youtube.com/channel/UCKj5FIgxeihLRLDpVqKp_aA",
+    "youtube": "UCKj5FIgxeihLRLDpVqKp_aA",
+    "sport": "kickboxing",
+    "official": true,
+    "language": "en"
+  },
+  {
+    "name": "ONE Championship (YouTube)",
+    "url": "https://www.youtube.com/channel/UCiormkBf3jm6mfb7k0yPbKA",
+    "youtube": "UCiormkBf3jm6mfb7k0yPbKA",
+    "sport": "muay-thai",
+    "official": true,
+    "language": "en"
+  },
+  {
+    "name": "FloGrappling (YouTube)",
+    "url": "https://www.youtube.com/channel/UCeOvhU6RbmEj8GKFiIMWxKQ",
+    "youtube": "UCeOvhU6RbmEj8GKFiIMWxKQ",
+    "sport": "grappling",
+    "language": "en"
+  },
+  {
+    "name": "United World Wrestling (YouTube)",
+    "url": "https://www.youtube.com/channel/UCi8PYovluicFUUD_YxJIcMA",
+    "youtube": "UCi8PYovluicFUUD_YxJIcMA",
+    "sport": "lutte",
+    "official": true,
+    "language": "en"
   }
 ]

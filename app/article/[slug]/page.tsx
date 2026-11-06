@@ -51,7 +51,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           article.image_url && <SourcePhoto src={article.image_url} credit={article.source_name} eager />
         )}
         {!article.body && <p className="meta">{video ? "Vidéo de" : "Extrait de"} {article.source_name}</p>}
-        {article.summary && <p className="lead">{article.summary}</p>}
+        {article.summary && !article.body && <p className="lead">{article.summary}</p>}
         {!article.body && !article.summary && <p>Ce média ne fournit pas d'extrait pour cette actualité.</p>}
         {article.body ? (
           article.body.split("\n\n").map((p, i) => <p key={i}>{p}</p>)
