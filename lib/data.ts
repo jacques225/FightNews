@@ -93,3 +93,8 @@ export function timeAgo(iso: string): string {
 
 /** "28 septembre 2026 à 21:10" */
 export const fullDate = (iso: string) => longFmt.format(new Date(iso));
+
+/** Titre affiché sans emojis (fréquents dans les titres YouTube), pour une mise en page de presse. */
+export function displayTitle(title: string): string {
+  return title.replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, "").replace(/\s{2,}/g, " ").trim();
+}

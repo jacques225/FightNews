@@ -2,7 +2,7 @@ import Link from "next/link";
 import SourcePhoto from "@/components/SourcePhoto";
 import type { Article } from "@/lib/types";
 import { getSport } from "@/lib/sports";
-import { timeAgo } from "@/lib/data";
+import { displayTitle, timeAgo } from "@/lib/data";
 
 type Variant = "default" | "large" | "compact" | "feature";
 
@@ -24,7 +24,7 @@ export default function ArticleCard({ article, large = false, variant }: { artic
         {article.image_url && <SourcePhoto src={article.image_url} eager={v === "large"} />}
       </div>
       <div className="card-body">
-        {v === "large" ? <h2 className="card-title">{article.title}</h2> : <h3 className="card-title">{article.title}</h3>}
+        {v === "large" ? <h2 className="card-title">{displayTitle(article.title)}</h2> : <h3 className="card-title">{displayTitle(article.title)}</h3>}
         {(v === "large" || v === "feature") && article.summary && <p className="card-excerpt">{article.summary}</p>}
         <p className="meta">
           <span className="meta-sport">{sport?.short}</span>

@@ -5,7 +5,7 @@ import EventDate from "@/components/EventDate";
 import Fighters from "@/components/Fighters";
 import NewsletterForm from "@/components/NewsletterForm";
 import { getUpcomingEvents, mainBout, shortName, type FightEvent } from "@/lib/calendar";
-import { getLatest, timeAgo } from "@/lib/data";
+import { displayTitle, getLatest, timeAgo } from "@/lib/data";
 import { SPORTS, LIFESTYLE, getSport } from "@/lib/sports";
 import type { Article } from "@/lib/types";
 
@@ -75,7 +75,7 @@ function LatestItem({ article }: { article: Article }) {
   return (
     <li style={{ ["--c" as string]: sport?.color }}>
       <Link href={`/article/${article.slug}`}>
-        <span className="latest-headline">{article.title}</span>
+        <span className="latest-headline">{displayTitle(article.title)}</span>
         <span className="meta">
           <span className="meta-sport">{sport?.short}</span>
           <span>{timeAgo(article.published_at)}</span>
