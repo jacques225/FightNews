@@ -1,14 +1,18 @@
 /** Flux RSS français → titre, court extrait, photo et source → Supabase. Aucun appel à une IA. */
 import { createClient } from "@supabase/supabase-js";
-import { MAX_NEW_PER_RUN, eachSource, itemDate, publisherOf, readSource, snippetOf, MissingKeyError, currentVideos, imageOf, type Source } from "./feeds";
+import { MAX_NEW_PER_RUN, SOURCES, eachSource, itemDate, publisherOf, readSource, snippetOf, MissingKeyError, currentVideos, imageOf, type Source } from "./feeds";
 import { excerpt, fullText, isRepeat, sportOf, isCombatNews } from "./without-ai";
 import { previewImage } from "./preview";
+import { LIFESTYLE } from "../lib/sports";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const MAX_AGE_HOURS = 48;
 // Une chaîne YouTube très active (ONE Championship : une dizaine de vidéos par jour) ne doit pas
 // occuper toute la place d'un passage : au plus 2 nouvelles vidéos par chaîne et par passage.
 const MAX_VIDEOS_PER_CHANNEL = 2;
+// Boutiques des marques (Lifestyle) : 2 infos par passage au plus, nouveautés et promos confondues.
+const MAX_PER_SHOP = 2;
+const MAX_PER_SHOP_PER_DAY = 4;
 // Infos déjà enregistrées sans photo dont on cherche la photo d'aperçu à chaque passage.
 const PREVIEWS_PER_RUN = 20;
 // image_url vaut "" quand la page de l'article a été lue sans y trouver de photo : on ne la relit pas.
@@ -48,15 +52,43 @@ async function fetchAll(): Promise<Item[]> {
   return perSource.flat();
 }
 
-/** Garde au plus MAX_VIDEOS_PER_CHANNEL nouvelles vidéos par chaîne, les plus récentes. */
-function capVideos(items: Item[]): Item[] {
-  const perChannel = new Map<string, number>();
-  return items.filter((i) => {
-    if (!i.source.youtube) return true;
-    const n = perChannel.get(i.source.name) ?? 0;
-    perChannel.set(i.source.name, n + 1);
-    return n < MAX_VIDEOS_PER_CHANNEL;
-  });
+/**
+ * Garde au plus MAX_VIDEOS_PER_CHANNEL nouvelles vidéos par chaîne et, par boutique, MAX_PER_SHOP infos par
+ * passage sans dépasser MAX_PER_SHOP_PER_DAY sur 24 h : une source qui publie beaucoup d'un coup ne prend pas
+ * la place des autres. Dans une boutique, les nouveautés passent avant les promos, puis les plus fortes remises.
+ */
+function capPerSource(items: Item[], todayBySource = new Map<string, number>()): Item[] {
+  const rank = (i: Item) => (!i.source.shop ? 0 : i.title.startsWith("Nouveauté") ? 0 : 100 - Number(/-(\d+) %/.exec(i.title)?.[1] ?? 0));
+  const kept = new Set<Item>();
+  const perSource = new Map<string, number>();
+  for (const i of [...items].sort((a, b) => rank(a) - rank(b))) {
+    const max = i.source.youtube
+      ? MAX_VIDEOS_PER_CHANNEL
+      : i.source.shop
+        ? Math.min(MAX_PER_SHOP, MAX_PER_SHOP_PER_DAY - (todayBySource.get(i.source.name) ?? 0))
+        : Infinity;
+    const n = perSource.get(i.source.name) ?? 0;
+    perSource.set(i.source.name, n + 1);
+    if (n < max) kept.add(i);
+  }
+  return items.filter((i) => kept.has(i));
+}
+
+/** Infos enregistrées ces dernières 24 h pour chaque boutique (hors infos écartées). */
+async function shopCountsToday(): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const shops = SOURCES.filter((s) => s.shop).map((s) => s.name);
+  if (!supabase || !shops.length) return counts;
+  const since = new Date(Date.now() - 86400_000).toISOString();
+  const { data, error } = await supabase.from("articles").select("source_name")
+    .in("source_name", shops).neq("status", "rejected").gte("created_at", since);
+  if (error) {
+    console.warn(`Compte des infos des boutiques indisponible : ${error.message}`);
+    shops.forEach((name) => counts.set(name, MAX_PER_SHOP_PER_DAY)); // dans le doute, rien de plus aujourd'hui
+    return counts;
+  }
+  for (const r of data) counts.set(r.source_name, (counts.get(r.source_name) ?? 0) + 1);
+  return counts;
 }
 
 /** Liens déjà en base (publiés, en brouillon ou écartés), avec pour chacun : reste-t-il une photo à ajouter ? */
@@ -246,9 +278,9 @@ async function main() {
   await addPreviewImages();
   await refreshVideos();
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
-  const fresh = capVideos(unique
+  const fresh = capPerSource(unique
     .filter((i) => !known.has(i.link))
-    .sort((a, b) => b.date.localeCompare(a.date)))
+    .sort((a, b) => b.date.localeCompare(a.date)), await shopCountsToday())
     .slice(0, MAX_NEW_PER_RUN);
   console.log(`\n${all.length} entrées récentes, ${fresh.length} nouvelles à traiter${DRY_RUN ? " (dry-run)" : ""}\n`);
   const recent = await recentTitles();
@@ -273,7 +305,7 @@ async function main() {
     const preview = item.image ? undefined : await tryPreview(item.link);
     const image = item.image ?? (preview === undefined ? null : preview ?? NO_PREVIEW);
     const title = item.title.trim().slice(0, 300);
-    const content = { title, summary: excerpt(item.snippet, title), body: item.full ?? "", sport: sportOf(title, item.source.sport), tags: [] };
+    const content = { title, summary: excerpt(item.snippet, title), body: item.full ?? "", sport: item.source.sport === LIFESTYLE ? LIFESTYLE : sportOf(title, item.source.sport), tags: [] };
     const row = {
       slug: `${slugify(content.title)}-${Date.now().toString(36)}`,
       ...content,

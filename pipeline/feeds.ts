@@ -2,6 +2,7 @@ import { get as httpGet } from "node:http";
 import { get as httpsGet } from "node:https";
 import Parser from "rss-parser";
 import sources from "./sources.json";
+import { readShop, type ShopInfo } from "./shops";
 
 // Lecture des flux RSS, partagée par le robot (run.ts) et le vérificateur (check-sources.ts).
 
@@ -14,12 +15,14 @@ export type Source = {
   official?: boolean;  // site officiel (fédération, organisation) : badge "Officiel" sur le site
   youtube?: string;    // chaîne YouTube (identifiant UC…) : lue par l'API YouTube, pas par un flux RSS
   fullText?: boolean;  // le média a autorisé la reprise de ses articles en entier : texte complet du flux
+  shop?: ShopInfo;     // boutique Shopify d'une marque (url = …/products.json) : nouveautés et promos pour le Lifestyle
 };
 
 // Pas de traduction automatique : les flux RSS doivent être en français. Une vidéo se comprend sans
 // traduction, donc les chaînes YouTube officielles en anglais sont admises pour les sports sans chaîne
 // française active (kick, muay thaï, grappling, lutte : choix de Jacques le 6 novembre 2026).
-export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr" || (s.youtube && s.language === "en"));
+// Boutiques des marques : le robot écrit lui-même le texte en français, seul le nom du produit peut être en anglais.
+export const SOURCES = (sources as Source[]).filter((s) => s.language === "fr" || ((s.youtube || s.shop) && s.language === "en"));
 
 export const MAX_NEW_PER_RUN = 25; // plafond par passage du robot, pour limiter le volume de chaque import
 
@@ -100,8 +103,9 @@ export function download(url: string, redirects = 0): Promise<{ status: number; 
   });
 }
 
-/** Lit une source : son flux RSS, ou ses dernières vidéos si c'est une chaîne YouTube. */
+/** Lit une source : son flux RSS, ses dernières vidéos si c'est une chaîne YouTube, son catalogue si c'est une boutique. */
 export function readSource(source: Source) {
+  if (source.shop) return readShop(source);
   return source.youtube ? readYouTube(source.youtube) : readFeed(source.url);
 }
 

@@ -207,6 +207,21 @@ Elle contrôle le flux, robots.txt, les dates et les photos, puis indique les so
 Elle s'exécute également chaque lundi et lorsque la configuration des sources change.
 Une erreur temporaire d'un média n'empêche pas le robot d'importer les autres sources.
 
+### Lifestyle : boutiques des marques
+
+Le robot lit le catalogue public des boutiques en ligne de Venum, RDX, Metal Boxe, Hayabusa et Fairtex
+(adresse `…/products.json` des boutiques Shopify, sans clé, non interdite par leur robots.txt) et en tire deux
+sortes d'infos pour la rubrique Lifestyle (`pipeline/shops.ts`) :
+
+- **Nouveauté** : un produit créé il y a moins de 60 jours, tous coloris réunis, avec son prix (boutiques en euros) ;
+- **Promo** : une remise d'au moins 15 % (prix barré), avec la date à laquelle elle a été constatée. Le lien
+  porte le pourcentage : la même promo n'est publiée qu'une fois.
+
+Le texte est écrit par le robot en français à partir des faits du catalogue. Au plus 2 infos par boutique et
+par passage, et 4 sur 24 h, nouveautés d'abord. Les chaînes YouTube des marques alimentent aussi la rubrique.
+Pour ajouter une boutique Shopify : une entrée avec `"shop": { "brand": "…", "currency": "EUR" }` et
+`"url": "https://…/products.json"` (`"describe": true` reprend le début de la description si elle est en français).
+
 ## Le calendrier
 
 La page `/calendrier` et l'encart « Prochains combats » de l'accueil listent les prochains galas de l'UFC, du PFL,

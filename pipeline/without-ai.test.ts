@@ -6,7 +6,7 @@ import { FRENCH_PUBLISHERS } from "../lib/rss-sources";
 
 test("les sources actives et les listes publiques utilisent la même sélection française", () => {
   assert.ok(SOURCES.length > 0);
-  assert.ok(SOURCES.every((s) => s.language === "fr" || s.youtube));
+  assert.ok(SOURCES.every((s) => s.language === "fr" || s.youtube || s.shop));
   assert.deepEqual(FRENCH_PUBLISHERS, SOURCES.map((s) => s.name));
   assert.ok(!FRENCH_PUBLISHERS.includes("UFC"));
 });
