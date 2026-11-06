@@ -6,6 +6,9 @@ import { previewImage } from "./preview";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const MAX_AGE_HOURS = 48;
+// Une chaîne YouTube très active (ONE Championship : une dizaine de vidéos par jour) ne doit pas
+// occuper toute la place d'un passage : au plus 2 nouvelles vidéos par chaîne et par passage.
+const MAX_VIDEOS_PER_CHANNEL = 2;
 // Infos déjà enregistrées sans photo dont on cherche la photo d'aperçu à chaque passage.
 const PREVIEWS_PER_RUN = 20;
 // image_url vaut "" quand la page de l'article a été lue sans y trouver de photo : on ne la relit pas.
@@ -43,6 +46,17 @@ async function fetchAll(): Promise<Item[]> {
   });
   if (skippedYouTube) console.warn(`⚠ ${skippedYouTube} chaînes YouTube ignorées : secret YOUTUBE_API_KEY absent (voir le README, « Les sources »).`);
   return perSource.flat();
+}
+
+/** Garde au plus MAX_VIDEOS_PER_CHANNEL nouvelles vidéos par chaîne, les plus récentes. */
+function capVideos(items: Item[]): Item[] {
+  const perChannel = new Map<string, number>();
+  return items.filter((i) => {
+    if (!i.source.youtube) return true;
+    const n = perChannel.get(i.source.name) ?? 0;
+    perChannel.set(i.source.name, n + 1);
+    return n < MAX_VIDEOS_PER_CHANNEL;
+  });
 }
 
 /** Liens déjà en base (publiés, en brouillon ou écartés), avec pour chacun : reste-t-il une photo à ajouter ? */
@@ -232,9 +246,9 @@ async function main() {
   await addPreviewImages();
   await refreshVideos();
   // Les plus récentes d'abord : si le plafond est atteint, ce sont les plus anciennes qui attendent.
-  const fresh = unique
+  const fresh = capVideos(unique
     .filter((i) => !known.has(i.link))
-    .sort((a, b) => b.date.localeCompare(a.date))
+    .sort((a, b) => b.date.localeCompare(a.date)))
     .slice(0, MAX_NEW_PER_RUN);
   console.log(`\n${all.length} entrées récentes, ${fresh.length} nouvelles à traiter${DRY_RUN ? " (dry-run)" : ""}\n`);
   const recent = await recentTitles();

@@ -129,7 +129,38 @@ export async function readYouTube(channelId: string) {
   const data = JSON.parse(res.body.toString("utf8") || "{}") as { items?: YouTubeItem[]; error?: { message?: string } };
   if (res.status >= 500) throw new UnavailableError(`erreur ${res.status} de l'API YouTube`);
   if (res.status >= 300) throw new Error(`API YouTube ${res.status} : ${data.error?.message ?? "refus"}`);
-  return { items: youTubeItems(data.items ?? []) };
+  const items = youTubeItems(data.items ?? []);
+  // Les « Shorts » (clips promo, anniversaires, extraits de 30 s) noient les vraies vidéos : on les écarte.
+  const durations = await videoDurations(items.map((v) => new URL(v.link).searchParams.get("v")!), key);
+  return { items: items.filter((v) => (durations.get(new URL(v.link).searchParams.get("v")!) ?? Infinity) > MIN_VIDEO_SECONDS) };
+}
+
+/** Une vidéo de 3 minutes ou moins est un Short ou un clip promo, pas une info. */
+export const MIN_VIDEO_SECONDS = 180;
+
+/** Durée en secondes de chaque vidéo (1 unité d'API pour 50 vidéos). En cas d'échec, aucune n'est écartée. */
+async function videoDurations(ids: string[], key: string): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!ids.length) return out;
+  const params = new URLSearchParams({ part: "contentDetails", id: ids.slice(0, 50).join(","), key });
+  try {
+    const res = await download(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+    if (res.status >= 300) return out;
+    const data = JSON.parse(res.body.toString("utf8") || "{}") as { items?: { id?: string; contentDetails?: { duration?: string } }[] };
+    for (const v of data.items ?? []) if (v.id) out.set(v.id, isoSeconds(v.contentDetails?.duration));
+  } catch {
+    // durée inconnue : on garde les vidéos
+  }
+  return out;
+}
+
+/** « PT1H2M30S » → 3750 secondes. Durée illisible ou nulle (direct) : Infinity (la vidéo est gardée). */
+export function isoSeconds(iso: string | undefined): number {
+  const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso ?? "");
+  if (!m || iso === "P0D") return Infinity;
+  const [, d, h, min, sec] = m.map((x) => Number(x ?? 0));
+  const total = d * 86400 + h * 3600 + min * 60 + sec;
+  return total || Infinity; // durée nulle (PT0S) : direct en cours, gardé
 }
 
 /**

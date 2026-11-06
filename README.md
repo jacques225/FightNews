@@ -188,7 +188,8 @@ privée est retirée du site, et la page « Confidentialité » mentionne YouTub
 Point flou : les règles interdisent d'« agréger » les données de l'API de plusieurs propriétaires de chaînes.
 Elles visent surtout les statistiques, mais Google pourrait couper la clé ; le reste du robot continuerait.
 
-Le robot utilise environ 250 unités par jour sur les 10 000 offertes. Sans clé, les chaînes sont simplement
+Le robot utilise environ 1 000 unités par jour sur les 10 000 offertes. Il écarte les Shorts (vidéos de 3 minutes
+ou moins : clips promo) et prend au plus 2 nouvelles vidéos par chaîne et par passage. Sans clé, les chaînes sont simplement
 ignorées (avertissement dans le journal) et les flux RSS continuent normalement.
 
 Pour ajouter une chaîne : son identifiant `UC…` (visible dans le code de la page de la chaîne, `"externalId"`).
