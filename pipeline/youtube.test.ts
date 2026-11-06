@@ -52,3 +52,12 @@ test("sans clé d'API, le rafraîchissement des vidéos est refusé proprement",
   await assert.rejects(currentVideos(["abcdefghijk"]), MissingKeyError);
   if (saved !== undefined) process.env.YOUTUBE_API_KEY = saved;
 });
+
+test("la durée ISO d'une vidéo YouTube est lue en secondes", async () => {
+  const { isoSeconds, MIN_VIDEO_SECONDS } = await import("./feeds");
+  assert.equal(isoSeconds("PT58S"), 58);
+  assert.equal(isoSeconds("PT12M3S"), 723);
+  assert.equal(isoSeconds("PT1H2M30S"), 3750);
+  assert.equal(isoSeconds("P0D"), Infinity); // direct en cours : gardé
+  assert.ok(isoSeconds("PT2M50S") <= MIN_VIDEO_SECONDS);
+});
