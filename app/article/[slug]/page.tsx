@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
 import SourcePhoto from "@/components/SourcePhoto";
-import { fullDate, getArticle, getEarlier } from "@/lib/data";
+import { displayTitle, fullDate, getArticle, getEarlier } from "@/lib/data";
 import { getSport } from "@/lib/sports";
 import { youTubeId } from "@/lib/youtube";
 
@@ -29,7 +29,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     <>
       <article className="article">
         <Link href={`/${article.sport}`} className="article-sport" style={{ ["--c" as string]: sport?.color }}>{sport?.name}</Link>
-        <h1>{article.title}</h1>
+        <h1>{displayTitle(article.title)}</h1>
         <p className="meta">Publié le {fullDate(article.published_at)}</p>
         {video ? (
           // Vidéo d'une chaîne YouTube : lecteur officiel de YouTube (mode sans cookie tant qu'on ne lance pas la vidéo).

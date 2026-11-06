@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { animate, inView, stagger } from "motion";
+import { animate, inView, scroll, stagger } from "motion";
 
 const EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -13,6 +13,8 @@ const EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
  * - « À l'instant » arrive ligne par ligne ;
  * - plus bas, chaque section arrive à son tour : titre, puis cartes dont la photo se pose ;
  *   la rangée des combats glisse depuis la droite.
+ * - défilement (exemples « parallax » et barre de progression du MCP Motion) : la photo de la une
+ *   glisse un peu moins vite que la page, et une barre rouge suit la lecture d'un article.
  * Le contenu est visible par défaut : seules les sections encore sous l'écran sont masquées puis
  * révélées une fois. Sans JavaScript, ou avec « réduire les animations », rien ne bouge.
  */
@@ -31,6 +33,23 @@ export default function Reveal() {
       // Une fois posée, la photo rend la main au survol (CSS).
       if (img) animate(img, { transform: ["scale(1.12)", "scale(1)"] }, { duration: 1.6, ease: EXPO }).then(() => { img.style.transform = ""; });
       animate(lead.querySelectorAll(".card-body > *"), { opacity: [0, 1], transform: ["translateY(24px)", "translateY(0)"] }, { duration: 0.9, ease: EXPO, delay: stagger(0.09, { startDelay: 0.45 }) });
+    }
+
+    // Parallaxe douce de la photo de la une, liée au défilement.
+    const leadImg = lead?.querySelector<HTMLElement>(".card-img img");
+    if (lead && leadImg) {
+      stops.push(scroll(animate(leadImg, { translate: ["0 -6%", "0 6%"] }, { ease: "linear" }), { target: lead.querySelector(".card-img")!, offset: ["start end", "end start"] }));
+    }
+
+    // Barre de lecture sur la page article.
+    const article = document.querySelector<HTMLElement>("article.article");
+    if (article) {
+      const bar = document.createElement("div");
+      bar.className = "read-progress";
+      bar.setAttribute("aria-hidden", "true");
+      document.body.appendChild(bar);
+      stops.push(scroll(animate(bar, { scaleX: [0, 1] }, { ease: "linear" }), { target: article, offset: ["start start", "end end"] }));
+      stops.push(() => bar.remove());
     }
 
     const rows = document.querySelectorAll(".latest-list li");
