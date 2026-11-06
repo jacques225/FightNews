@@ -59,5 +59,6 @@ test("la durée ISO d'une vidéo YouTube est lue en secondes", async () => {
   assert.equal(isoSeconds("PT12M3S"), 723);
   assert.equal(isoSeconds("PT1H2M30S"), 3750);
   assert.equal(isoSeconds("P0D"), Infinity); // direct en cours : gardé
+  assert.equal(isoSeconds("PT0S"), Infinity);
   assert.ok(isoSeconds("PT2M50S") <= MIN_VIDEO_SECONDS);
 });

@@ -154,12 +154,13 @@ async function videoDurations(ids: string[], key: string): Promise<Map<string, n
   return out;
 }
 
-/** « PT1H2M30S » → 3750 secondes. Durée illisible : Infinity (la vidéo est gardée). */
+/** « PT1H2M30S » → 3750 secondes. Durée illisible ou nulle (direct) : Infinity (la vidéo est gardée). */
 export function isoSeconds(iso: string | undefined): number {
   const m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso ?? "");
   if (!m || iso === "P0D") return Infinity;
   const [, d, h, min, sec] = m.map((x) => Number(x ?? 0));
-  return d * 86400 + h * 3600 + min * 60 + sec;
+  const total = d * 86400 + h * 3600 + min * 60 + sec;
+  return total || Infinity; // durée nulle (PT0S) : direct en cours, gardé
 }
 
 /**
