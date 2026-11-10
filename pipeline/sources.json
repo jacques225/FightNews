@@ -162,5 +162,63 @@
     "sport": "lutte",
     "official": true,
     "language": "en"
+  },
+  {
+    "name": "Venum",
+    "url": "https://fr.venum.com/products.json",
+    "shop": {
+      "brand": "Venum",
+      "currency": "EUR",
+      "describe": true
+    },
+    "sport": "lifestyle",
+    "official": true,
+    "language": "fr"
+  },
+  {
+    "name": "RDX Sports",
+    "url": "https://www.rdxsports.fr/products.json",
+    "shop": {
+      "brand": "RDX",
+      "currency": "EUR",
+      "describe": true
+    },
+    "sport": "lifestyle",
+    "official": true,
+    "language": "fr"
+  },
+  {
+    "name": "Metal Boxe",
+    "url": "https://www.metal-boxe.com/products.json",
+    "shop": {
+      "brand": "Metal Boxe",
+      "currency": "EUR",
+      "describe": true
+    },
+    "sport": "lifestyle",
+    "official": true,
+    "language": "fr"
+  },
+  {
+    "name": "Hayabusa",
+    "url": "https://hayabusafight.com/products.json",
+    "shop": {
+      "brand": "Hayabusa",
+      "currency": "USD"
+    },
+    "sport": "lifestyle",
+    "official": true,
+    "language": "en"
+  },
+  {
+    "name": "Fairtex",
+    "url": "https://www.fairtex.com/products.json",
+    "shop": {
+      "brand": "Fairtex",
+      "currency": "USD"
+    },
+    "sport": "lifestyle",
+    "official": true,
+    "language": "en"
   }
 ]
