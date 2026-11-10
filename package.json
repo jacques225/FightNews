@@ -8,6 +8,7 @@
     "start": "next start",
     "pipeline": "tsx --env-file-if-exists=.env.local pipeline/run.ts",
     "pipeline:dry": "tsx --env-file-if-exists=.env.local pipeline/run.ts --dry-run",
+    "enrich:source": "NODE_USE_ENV_PROXY=1 NODE_NO_WARNINGS=1 tsx pipeline/enrich-source.ts",
     "sources:check": "tsx pipeline/check-sources.ts",
     "calendar:check": "tsx pipeline/calendar-check.ts",
     "newsletter": "tsx --env-file-if-exists=.env.local pipeline/newsletter.ts",

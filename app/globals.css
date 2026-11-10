@@ -263,6 +263,14 @@ main.container { padding-top: 32px; min-height: 70vh; }
 .article-video .meta { margin-top: 8px; }
 .article > p:not(.meta) { font-size: 18px; line-height: 1.65; max-width: 62ch; }
 .article > p.lead { font-size: var(--step-lead); line-height: 1.4; font-weight: 500; letter-spacing: -0.015em; margin-top: 32px; color: var(--ink); }
+.article-credit { margin-top: 24px; }
+.article-credit a { color: var(--ink); font-weight: 600; text-decoration: underline 2px; text-decoration-color: var(--red); text-underline-offset: 0.18em; }
+.article-body { margin-top: 24px; }
+.article-body p { font-size: 18px; line-height: 1.65; max-width: 62ch; margin: 0 0 1.1em; }
+.article-body h2 { font-size: clamp(20px, 2vw, 26px); line-height: 1.1; margin: 1.6em 0 .6em; max-width: 40ch; }
+.article-body blockquote { margin: 1.4em 0; padding: 4px 0 4px 20px; box-shadow: inset 4px 0 0 var(--red); font-size: 19px; line-height: 1.5; font-style: italic; max-width: 58ch; }
+.article-body a { text-decoration: underline 1px; text-decoration-color: var(--red); text-underline-offset: 0.18em; }
+.article-body a:hover { color: var(--red); }
 .source { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 40px; padding: 18px 20px; background: var(--paper); font-size: 15px; }
 .source a { font-weight: 600; text-decoration: underline 2px; text-decoration-color: var(--red); text-underline-offset: 0.18em; }
 .tags { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
@@ -381,7 +389,7 @@ main.container { padding-top: 32px; min-height: 70vh; }
   .lifestyle-block { margin-left: -16px; margin-right: -16px; padding: 36px 16px; }
   .page-head { padding: 24px 0 32px; }
   .page-head p { margin-top: 16px; }
-  .article > p:not(.meta) { font-size: 17px; }
+  .article > p:not(.meta), .article-body p { font-size: 17px; }
   .pagination { grid-template-columns: 1fr 1fr; }
   .pagination-info { grid-column: 1 / -1; grid-row: 2; text-align: center; }
   .cal-event { grid-template-columns: 64px minmax(0, 1fr); gap: 12px 16px; padding: 16px; }
