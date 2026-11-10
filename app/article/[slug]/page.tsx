@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import ArticleBody from "@/components/ArticleBody";
 import ArticleCard from "@/components/ArticleCard";
 import SourcePhoto from "@/components/SourcePhoto";
 import { displayTitle, fullDate, getArticle, getEarlier } from "@/lib/data";
@@ -54,7 +55,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         {article.summary && !article.body && <p className="lead">{article.summary}</p>}
         {!article.body && !article.summary && <p>Ce média ne fournit pas d'extrait pour cette actualité.</p>}
         {article.body ? (
-          article.body.split("\n\n").map((p, i) => <p key={i}>{p}</p>)
+          <>
+            {/* Article rédigé par FightNews à partir de l'article du média, mis en avant en tête et en fin d'article. */}
+            <p className="meta article-credit">
+              D'après <a href={article.source_url} target="_blank" rel="noopener">{article.source_name}</a>
+            </p>
+            <ArticleBody body={article.body} />
+            <p>
+              <a className="btn" href={article.source_url} target="_blank" rel="noopener">
+                {video ? "Voir la vidéo sur YouTube" : `Lire l'article original sur ${article.source_name}`}
+              </a>
+            </p>
+          </>
         ) : (
           // Brève enregistrée sans IA : juste un extrait, l'article complet est chez son média.
           <p>
