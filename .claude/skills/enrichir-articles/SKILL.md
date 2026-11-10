@@ -84,7 +84,7 @@ un article creux : on saute cet article et on le signale dans le compte rendu.
 
 ### 4. Rédiger
 
-- Français, ton de rédaction sportive, phrases nettes. 350 à 700 mots selon la matière disponible.
+- Français, ton de rédaction sportive, phrases nettes. 300 à 700 mots selon la matière disponible (jamais de remplissage pour atteindre un nombre de mots).
 - Structure :
   1. **Chapô** (2-3 phrases) : le fait, qui, quoi, quand, et la source liée.
   2. Deux ou trois parties avec intertitres « ## » courts et concrets : le contexte (parcours, palmarès,
