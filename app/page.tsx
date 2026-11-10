@@ -20,7 +20,10 @@ export default async function Home() {
     getUpcomingEvents(),
     ...sports.map((s) => getLatest(5, s.slug)),
   ]);
-  const [hero, ...rest] = articles;
+  // La une prend la dernière actu qui a une photo ; les autres suivent dans « À l'instant ».
+  const heroIndex = Math.max(0, articles.findIndex((a) => a.image_url));
+  const hero = articles[heroIndex];
+  const rest = articles.filter((_, i) => i !== heroIndex);
 
   return (
     <>
